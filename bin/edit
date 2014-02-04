@@ -1,0 +1,75 @@
+#!/bin/sh
+
+#
+# edit
+#
+# Find the "right" gvim server and send some files to it.
+#
+
+unset nofork
+
+if [ "$1" == "--nofork" ]
+then
+	nofork=1
+	shift
+fi
+
+serverlist=`gvim --serverlist`
+
+uppercase () {
+	echo "$@" | tr a-z A-Z
+}
+
+server_exists () {
+	echo $serverlist | grep -F "`uppercase \"$1\"`" 2>&1 >/dev/null
+}
+
+if [ "$PWD" == "$HOME" ]
+then
+	# Special case any editor starting up in the home directory
+	server=GVIM
+else
+	# Keep looking up the path to see if there is an editor we can
+	# use. If not then start one named after the current directory.
+	d="$PWD"
+	while [ "$d" != "/" ]
+	do
+		server="`basename \"$d\"`"
+		if server_exists "$server"
+		then
+			break
+		fi
+
+		d="`dirname \"$d\"`"
+	done
+
+	if [ "$d" == "/" ]
+	then
+		server="`basename \"$PWD\"`"
+	fi
+fi
+
+
+if server_exists $server
+then
+	if [ $# -gt 0 ]
+	then
+		if [ -z $nofork ]
+		then
+			gvim --servername "$server" --remote-tab "$@"
+		else
+			echo Waiting for tab to close... 
+			gvim --servername "$server" --remote-tab-wait "$@"
+		fi
+	else
+		gvim --servername "$server" --remote-send '<ESC>:tabnew<CR>:call foreground()<CR>'
+	fi
+else
+	if [ -z $nofork ]
+	then
+		gvim --servername "$server" "$@"
+	else
+		echo Waiting for editor to close...
+		gvim --nofork --servername "$server" "$@"
+	fi
+fi

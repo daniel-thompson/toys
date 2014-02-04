@@ -1,0 +1,56 @@
+#
+# Reminder of some of the options
+#
+# This is taken by running the following in clang-3.4 (these options
+# don't work on clang-3.3 which is currently found in most distros):
+#   clang-format -style=WebKit -dump-config
+#
+#---
+## BasedOnStyle:  WebKit
+#Language:        Cpp
+#AccessModifierOffset: -4
+#ConstructorInitializerIndentWidth: 4
+#AlignEscapedNewlinesLeft: false
+#AlignTrailingComments: false
+#AllowAllParametersOfDeclarationOnNextLine: true
+#AllowShortIfStatementsOnASingleLine: false
+#AllowShortLoopsOnASingleLine: false
+#AllowShortFunctionsOnASingleLine: true
+#AlwaysBreakTemplateDeclarations: false
+#AlwaysBreakBeforeMultilineStrings: false
+#BreakBeforeBinaryOperators: true
+#BreakBeforeTernaryOperators: true
+#BreakConstructorInitializersBeforeComma: true
+#BinPackParameters: true
+#ColumnLimit:     0
+#ConstructorInitializerAllOnOneLineOrOnePerLine: false
+#DerivePointerBinding: false
+#ExperimentalAutoDetectBinPacking: false
+#IndentCaseLabels: false
+#MaxEmptyLinesToKeep: 1
+#NamespaceIndentation: Inner
+#ObjCSpaceBeforeProtocolList: true
+#PenaltyBreakBeforeFirstCallParameter: 19
+#PenaltyBreakComment: 60
+#PenaltyBreakString: 1000
+#PenaltyBreakFirstLessLess: 120
+#PenaltyExcessCharacter: 1000000
+#PenaltyReturnTypeOnItsOwnLine: 60
+#PointerBindsToType: true
+#SpacesBeforeTrailingComments: 1
+#Cpp11BracedListStyle: false
+#Standard:        Cpp03
+#IndentWidth:     4
+#TabWidth:        8
+#UseTab:          Never
+#BreakBeforeBraces: Stroustrup
+#IndentFunctionDeclarationAfterType: false
+#SpacesInParentheses: false
+#SpacesInAngles:  false
+#SpaceInEmptyParentheses: false
+#SpacesInCStyleCastParentheses: false
+#SpaceAfterControlStatementKeyword: true
+#SpaceBeforeAssignmentOperators: true
+#ContinuationIndentWidth: 4
+#...
+
