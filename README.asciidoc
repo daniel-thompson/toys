@@ -20,6 +20,10 @@ Organisation
   files located in a typical Unix-like home directory.
 * bashrc.d/ contains fragments to be included from a .bashrc file.
 * bin/ contains executable scripts.
+* clang_complete/ is a git sub-module containing the VIM support for
+  clang based autocompletion (git submodule init; git submodule update;
+  cd clang_complete/; make && make install)
 * clang-format/ contains clang format descriptions of some common
-  coding styles.
+  coding styles. It also contains clang-format.py (from LLVM distro)
+  that must be placed into ~/.vim/bin.
 
