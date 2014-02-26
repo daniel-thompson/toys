@@ -74,16 +74,32 @@ pkg-config-path-prepend () {
 	export PKG_CONFIG_PATH
 }
 
+python-path-append () {
+	echo $PYTHONPATH | grep "$1" > /dev/null || \
+		PYTHONPATH=$PYTHONPATH:$1
+	export PYTHONPATH
+}
+
+python-path-prepend () {
+	echo $PYTHONPATH | grep "$1" > /dev/null || \
+		PYTHONPATH=$1:$PYTHONPATH
+	export PATH
+}
+
 all-path-append () {
+	libpath-append $1/lib64
 	libpath-append $1/lib
 	manpath-append $1/man
 	path-append $1/bin
 	pkg-config-path-append $1/lib/pkgconfig
+	python-path-append $1/lib64/python2.7/site-packages
 }
 
 all-path-prepend () {
 	libpath-prepend $1/lib
+	libpath-prepend $1/lib64
 	manpath-prepend $1/man
 	path-prepend $1/bin
 	pkg-config-path-prepend $1/lib/pkgconfig
+	python-path-append $1/lib64/python2.7/site-packages
 }
