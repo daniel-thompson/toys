@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#
+# sshd-to-cloud
+#
+# Establish tunnelled access to the localhost's sshd port via public
+# facing SSH server. Note that the SSH server may need special
+# configuration in order to allow the forwarded port to be bound
+# the right network interfaces.
+#
+
+get-remote-port () {
+	local ipaddr
+	local port
+
+	ipaddr=`ifconfig | grep '192\.168' | awk '{ print $2 }'`
+	port=$((4000 + `echo $ipaddr | cut -d. -f4`))
+
+	echo $port
+}
+
+make-tunnel () {
+	local port
+	port=`get-remote-port`
+	ssh -R "*:$port:localhost:22" "$@"
+}
+
+make-tunnel "$@"
+while [ $? -ne 0 ]
+do
+	make-tunnel "$@"
+done
