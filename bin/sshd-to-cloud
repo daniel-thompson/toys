@@ -9,20 +9,63 @@
 # the right network interfaces.
 #
 
-get-remote-port () {
+get-port () {
 	local ipaddr
 	local port
 
-	ipaddr=`ifconfig | grep '192\.168' | awk '{ print $2 }'`
-	port=$((4000 + `echo $ipaddr | cut -d. -f4`))
+	ipaddr=`ifconfig | grep '192\.168' | head -1 | awk '{ print $2 }'`
+	port=$(($1 + `echo $ipaddr | cut -d. -f4`))
 
 	echo $port
 }
 
+get-ssh-port () {
+	get-port 4000
+}
+
+get-mosh-port () {
+	get-port 60000
+}
+
 make-tunnel () {
 	local port
-	port=`get-remote-port`
-	ssh -R "*:$port:localhost:22" "$@"
+	port=`get-ssh-port`
+	mosh=`get-mosh-port`
+	if [ $# -gt 1 ]
+	then
+		ssh \
+		  -R "*:$port:localhost:22" \
+		  "$@"
+		result=$?
+	else
+		echo "Launching ssh (and mosh) bridges together with keep alive messages..."
+
+		# Open a TCP/UDP bridge (for mosh backhaul)
+		socat tcp4-listen:$mosh,reuseaddr,fork UDP:localhost:$mosh &
+		socatpid=$!
+
+		# ssh out to the server providing reverse forwarding for
+		# ssh (4000+N to 22) and mosh backhaul (60000+N to 60000+N).
+		# Also launches a keep-alive script (useful for monitoring)
+		ssh \
+		  -R "*:$port:localhost:22" -R "*:$mosh:localhost:$mosh" \
+		  "$@" \
+		  sh\ -c\ \'"socat -T15 udp4-recvfrom:$mosh,reuseaddr,fork tcp:localhost:$mosh & bin/keep-alive"\'
+		result=$?
+
+		# Reap the local socat process
+		kill $socatpid
+		wait
+	fi
+
+	echo "Note: ssh session terminated, return code $result"
+	if [ 0 -ne $result ]
+	then
+		echo "      Press ^C in the next fifteen seconds to abort."
+		sleep 15
+	fi
+
+	return $result
 }
 
 make-tunnel "$@"
