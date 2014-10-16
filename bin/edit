@@ -8,7 +8,7 @@
 
 unset nofork
 
-if [ "$1" == "--nofork" ]
+if [ "$1" = "--nofork" ]
 then
 	nofork=1
 	shift
@@ -24,7 +24,7 @@ server_exists () {
 	echo $serverlist | grep -F "`uppercase \"$1\"`" 2>&1 >/dev/null
 }
 
-if [ "$PWD" == "$HOME" ]
+if [ "$PWD" = "$HOME" ]
 then
 	# Special case any editor starting up in the home directory
 	server=GVIM
@@ -43,7 +43,7 @@ else
 		d="`dirname \"$d\"`"
 	done
 
-	if [ "$d" == "/" ]
+	if [ "$d" = "/" ]
 	then
 		server="`basename \"$PWD\"`"
 	fi
