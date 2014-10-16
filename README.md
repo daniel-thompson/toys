@@ -15,26 +15,26 @@ plundered rather than as a functional work.
 Quickstart
 ----------
 
-  git clone git@github.com:daniel-thompson/toys.git
+    git clone git@github.com:daniel-thompson/toys.git
 
-  # Fetch all the submodules
-  git submodule update --init --recursive
+    # Fetch all the submodules
+    git submodule update --init --recursive
 
-  # Configure bash
-  mkdir ~/.bashrc.d
-  ln -s $PWD/bashrc.d/* ~/.bashrc.d/
-  cat bashrc >> ~/.bashrc
+    # Configure bash
+    mkdir ~/.bashrc.d
+    ln -s $PWD/bashrc.d/* ~/.bashrc.d/
+    cat bashrc >> ~/.bashrc
 
-  # Put some scripts on the path
-  mkdir -p ~/public/bin
-  ln -s $PWD/bin/* ~/public/bin
+    # Put some scripts on the path
+    mkdir -p ~/public/bin
+    ln -s $PWD/bin/* ~/public/bin
 
-  # Configure tmux and vim
-  ln -s $PWD/tmux.conf ~/.tmux.conf
-  ln -s $PWD/vim ~/.vim
+    # Configure tmux and vim
+    ln -s $PWD/tmux.conf ~/.tmux.conf
+    ln -s $PWD/vim ~/.vim
 
-  # Hide some temporary files from git
-  printf 'doc/tags\n.gitignore\n' > vim/bundle/vimwiki/.gitignore
+    # Hide some temporary files from git
+    printf 'doc/tags\n.gitignore\n' > vim/bundle/vimwiki/.gitignore
 
 Organisation
 ------------
