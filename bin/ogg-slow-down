@@ -1,0 +1,64 @@
+#!/bin/sh
+
+#
+# ogg-slow-down
+#
+# Generate slowed down tracks ahead of time using rubberband. Uses ogginfo
+# to copy metadata from the original track. It will automatically check for
+# "partner" .flac files and use that to generate the (temporary) .wav files.
+#
+
+#
+# Usage:
+#     ogg-slow-down <oggfile> <slowdown-factor>
+#     ogg-slow-down "01 - Fabulous.ogg" 1.3
+#
+
+get_info () {
+	fname="$1"
+	comment="$2"
+	arg="$3"
+	extra="$4"
+
+	tag=`ogginfo "$fname" | grep "^	$comment=" | cut -f2 -d=`
+	if [ $? -eq 0 ]
+	then
+		echo "--$arg=$tag$extra"
+	fi
+}
+
+# Extract the arguments
+oggname="$1"
+slowdown="$2"
+
+# Generate filenames
+stem="`dirname \"$oggname\"`/`basename \"$oggname\" .ogg`"
+flacname="$stem.flac"
+wavname="$stem.wav"
+wavout="$stem-${slowdown}x.wav"
+oggout="$stem-${slowdown}x.ogg"
+
+# Decode, shift speed and remove intermediate file
+if [ -e "$flacname" ]
+then
+	flac -d "$flacname" -o "$wavname"
+else
+	oggdec "$oggname" -o "$wavname"
+fi
+rubberband -c 3 --time "$slowdown" "$wavname" "$wavout"
+rm "$wavname"
+
+# Build up the encode command line
+title="`get_info \"$oggname\" TITLE title \" (${slowdown}x)\"`"
+echo $title
+artist="`get_info \"$oggname\" ARTIST artist`"
+tracknum="`get_info \"$oggname\" TRACKNUMBER tracknum`"
+album="`get_info \"$oggname\" ALBUM album`"
+genre="`get_info \"$oggname\" GENRE genre`"
+cmd="oggenc \"$wavout\" -o \"$oggout\" $title"
+oggenc "$wavout" -o "$oggout" "$title" "$artist" "$tracknum" "$album" "$genre"
+
+# Final tidy
+rm "$wavout"
+
+
