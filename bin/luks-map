@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#
+# luks-map
+#
+# Map all luks block devices
+#
+
+for blkdev in `luks-scan`
+do
+	eval `blkid -o export $blkdev | grep '^UUID='`
+	cryptsetup open $blkdev luks-$UUID
+done

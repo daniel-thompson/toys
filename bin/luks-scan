@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#
+# luks-scan
+#
+# Find all the luks block devices within the system
+#
+
+for blkdev in `blkid | cut -f1 -d:`
+do
+	case `basename $blkdev` in
+	dm-[0-9]*|loop[0-9]*)
+		continue
+		;;
+	esac
+
+	cryptsetup isLuks $blkdev
+	if [ $? -eq 0 ]
+	then
+		echo $blkdev
+	fi
+done | sort
+
