@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#
+# Run a command and retain logs of its activity
+#
+
+fname=$1.log
+
+if [ -e $fname ]
+then
+	echo >> $fname
+fi
+
+echo Command: "$@" >> $fname
+date +'Date: %Y-%m-%d %H:%M:%S' >> $fname
+
+
+"$@" 2>&1 | tee -a $fname
