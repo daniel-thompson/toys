@@ -5,8 +5,13 @@
 #
 
 # Add all the normal paths
-all-path-prepend $HOME/public
+if [ -e $HOME/Apps ]
+then
+	all-path-prepend $HOME/Apps
+	PERL5LIB=$HOME/Apps/lib/perl
+else
+	all-path-prepend $HOME/public
+	PERL5LIB=$HOME/public/lib/perl
+fi
 
-# Include my personal perl5 library
-PERL5LIB=$HOME/public/lib/perl
 export PERL5LIB
