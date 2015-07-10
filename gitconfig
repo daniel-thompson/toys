@@ -1,0 +1,34 @@
+#
+# Basic .gitconfig
+#
+
+[user]
+	name = Daniel Thompson
+	email = daniel@redfelineninja.org.uk
+
+[push]
+	default = simple
+
+#[gui]
+#	spellingdictionary = none
+
+[guitool "Delete"]
+	cmd = rm $FILENAME
+	noconsole = yes
+	needsfile = yes
+[guitool "Edit"]
+	cmd = gvim $FILENAME
+	noconsole = yes
+	needsfile = yes
+[guitool "Ignore"]
+	cmd = echo $FILENAME >> `git root`/.gitignore
+	noconsole = yes
+	needsfile = yes
+[guitool "Fix trailing whitespace"]
+	cmd = sed -ie 's/[ \\t]*$//' $FILENAME && rm ${FILENAME}e
+	noconsole = yes
+	needsfile = yes
+
+[alias]
+	root = !pwd
+	sed = !git ls-files | xargs sed -i \"$@\"

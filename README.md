@@ -29,7 +29,8 @@ Quickstart
     mkdir -p ~/public/bin
     ln -s $PWD/bin/* ~/public/bin
 
-    # Configure tmux and vim
+    # Configure the various single files
+    ln -s $PWD/gitconfig ~/.gitconfig
     ln -s $PWD/tmux.conf ~/.tmux.conf
     ln -s $PWD/vim ~/.vim
 
