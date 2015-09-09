@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+
+#
+# kb
+#
+# Execute actions looked up from a markdown knowledge base.
+#
+
+import os, re, subprocess, tempfile, sys
+
+KB = '/home/drt/Documents/Wiki'
+
+MD_H_RE = '^ {0,3}(#+)(?P<heading>[^#]+)#*$'
+MD_CODE_BLOCK_RE = '^ {0,3}[`~][`~][`~] *(?P<language>[^` ]*) *(?P<comment>[^`]*)$'
+
+class KBError(Exception):
+	pass
+
+class KnowledgeBase:
+	def __init__(self, k):
+		candidates = []
+		for f in os.listdir(KB):
+			if k.lower() in f.lower():
+				candidates.append(f)
+
+		shortlist = [ c for c in candidates if c.startswith(k) ]
+		if not shortlist:
+			shortlist = [c for c in candidates if c.lower().startswith(k.lower())]
+		if not shortlist:
+			shortlist = candidates
+
+		if len(shortlist) == 0:
+			raise KBError('No knowledge found for {}'.format(k))
+			raise KBError(msg)
+		elif len(shortlist) == 1:
+			self.kb = shortlist[0]
+			self.key = k
+		else:
+			msg = ['Too much knowledge found for {}'.format(k)]
+			raise KBError('\n  '.join(msg + shortlist))
+
+	def open(self):
+		return open(KB + os.sep + self.kb, 'r')
+
+	def do_edit(self, argv):
+		subprocess.call(['edit'] + argv + [KB+os.sep+self.kb])
+
+	def do_help(self):
+		f = self.open()
+
+		heading = ''
+		actions = []
+		in_code_block = False
+
+		for ln in f.readlines():
+			ln = ln.rstrip()
+
+			m = re.match(MD_H_RE, ln)
+			if m and not in_code_block:
+				heading = m.group('heading').strip()
+
+			m = re.match(MD_CODE_BLOCK_RE, ln)
+			if m:
+				in_code_block = not in_code_block
+				if m.group('language') == 'sh':
+					actions.append((m.group('comment'), heading))
+		f.close()
+
+		print('''\
+USAGE: kb ACTION {} [ARGS...]
+Run an action from the knowledge base.
+
+Built-in actions:
+'''.format(self.key))
+		for b in sorted(builtin):
+			print('  {:<18}{}'.format(b, builtin[b][1]))
+
+		if len(actions) == 0:
+			print('\nNo {} specific actions are available'.format(self.kb))
+		else:
+			print('\nActions specific to {}:\n'.format(self.kb))
+			for a in actions:
+				print('  {:<18}{}'.format(a[0], a[1]))
+		print('')
+
+	def do_html(self):
+		subprocess.call(['cmark'] + [KB+os.sep+self.kb])
+
+	def do_show(self):
+		f = self.open()
+		for ln in f.readlines():
+			ln = ln.rstrip()
+			print(ln)
+		f.close()
+	
+	def do_run(self, action, argv, no_execute=False):
+		activated = False
+		cmds = []
+
+		f = self.open()
+
+		for ln in f.readlines():
+			ln = ln.rstrip()
+
+			m = re.match(MD_CODE_BLOCK_RE, ln)
+
+			if not activated and m:
+				if m.group('language') == 'sh' and m.group('comment') == action:
+					activated = True
+				continue
+
+			if activated and m:
+				break
+
+			if activated:
+				cmds.append(ln)
+
+		f.close()
+
+		if len(cmds) == 0:
+			raise KBError("{} has no {} action. Try 'kb {} help'.".format(self.kb, action, self.key))
+
+		if no_execute:
+			print('\n'.join(cmds))
+			return
+
+		f = tempfile.NamedTemporaryFile(prefix='tmp_kb_',
+				suffix='.sh', delete=False)
+		f.writelines([bytes(c+'\n', 'ascii') for c in cmds])
+		f.close()
+		retval = subprocess.call(
+				[os.environ['SHELL'], '-ex', f.name]
+				+ argv)
+		os.unlink(f.name)
+
+		return retval
+
+def do_dryrun(argv):
+	if len(argv) < 2:
+		raise KBError("Missing arguments. Try 'kb {} help'.".format(argv[0]))
+	KnowledgeBase(argv[0]).do_run(argv[1], argv[2:], no_execute=True)
+
+def do_edit(argv):
+	KnowledgeBase(argv[0]).do_edit(argv[1:])
+
+def do_grep(argv):
+	os.chdir(KB)
+	subprocess.call(['git', 'grep'] + argv)
+
+def do_help(argv=()):
+	if len(argv) == 0:
+		print('''\
+USAGE: kb ACTION [KEY] [ARGS...]
+Run an action from the knowledge base, potentially using the key if the
+to lookup the appropriate knowledge base entry.
+
+Built-in actions:
+''')
+		for b in sorted(builtin):
+			print('  {:<18}{}'.format(b, builtin[b][1]))
+		print('''
+Examples:
+
+  kb boot hikey     Run the boot action from the hikey knowledge base entry.
+                    This is a shorthand for to 'kb run hikey boot'
+  kb grep -l needle Show all knowledge base entries matching needle
+  kb help hikey     Show all custom actions for hikey
+''')
+	else:
+		KnowledgeBase(argv[0]).do_help()
+
+def do_html(argv):
+	return KnowledgeBase(argv[0]).do_html()
+
+def do_show(argv):
+	return KnowledgeBase(argv[0]).do_show()
+
+def do_run(argv):
+	if len(argv) < 2:
+		raise KBError("Missing arguments. Try 'kb {} help'.".format(argv[0]))
+	return KnowledgeBase(argv[0]).do_run(argv[1], argv[2:])
+
+builtin = {
+	'dryrun': (do_dryrun,
+		"Show that commands that would be expected by 'run'"),
+	'edit': (do_edit,
+		'Edit a knowledge base entry'),
+	'grep': (do_grep,
+		'Search the knowledge base'),
+	'help': (do_help,
+		'Show this help text and, if ARGS, list available actions'),
+	'html': (do_html,
+		'Convert the knowledge base entry to HTML'),
+	'show': (do_show,
+		'Show a knowledge base entry'),
+	'run': (do_run,
+		'Run an action from the knowledge base')
+}
+	
+def main(argv):
+	if len(argv) < 2:
+		raise KBError("No arguments. Try 'kb help'.")
+	
+	if argv[1] in builtin.keys():
+		return builtin[argv[1]][0](argv[2:])
+	else:
+		if len(argv) < 3:
+			raise KBError("Missing arguments. Try 'kb help'.")
+		return do_run([argv[2], argv[1]] + argv[3:])
+
+try:
+	sys.exit(main(sys.argv))
+except KBError as e:
+	print(e)
+sys.exit(127)
