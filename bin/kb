@@ -43,7 +43,7 @@ class KnowledgeBase:
 		return open(KB + os.sep + self.kb, 'r')
 
 	def do_edit(self, argv):
-		subprocess.call(['edit'] + argv + [KB+os.sep+self.kb])
+		return subprocess.call(['edit'] + argv + [KB+os.sep+self.kb])
 
 	def do_help(self):
 		f = self.open()
@@ -138,21 +138,22 @@ Built-in actions:
 def do_dryrun(argv):
 	if len(argv) < 2:
 		raise KBError("Missing arguments. Try 'kb {} help'.".format(argv[0]))
-	KnowledgeBase(argv[0]).do_run(argv[1], argv[2:], no_execute=True)
+	return KnowledgeBase(argv[0]).do_run(argv[1], argv[2:], no_execute=True)
 
 def do_edit(argv):
-	KnowledgeBase(argv[0]).do_edit(argv[1:])
+	return KnowledgeBase(argv[0]).do_edit(argv[1:])
 
 def do_grep(argv):
 	os.chdir(KB)
-	subprocess.call(['git', 'grep'] + argv)
+	return subprocess.call(['git', 'grep'] + argv)
 
 def do_help(argv=()):
 	if len(argv) == 0:
 		print('''\
 USAGE: kb ACTION [KEY] [ARGS...]
-Run an action from the knowledge base, potentially using the key if the
-to lookup the appropriate knowledge base entry.
+Run an action on the knowledge base. Most actions act on a single
+article of knowledge. These actions use KEY to lookup the appropriate
+entry from the knowledge base.
 
 Built-in actions:
 ''')
