@@ -1,0 +1,66 @@
+#!/bin/sh
+
+#
+# xterm
+#
+# xterm-a-like wrapper for gnome-terminal or tmux (depending on what we
+# have available.
+#
+# This is basically a hackish script to workaround that fact the ARM FVP
+# is (and maybe other useful tools are) hard coded to launch an xterm...
+#
+
+state=open
+
+if [ ! -z $DISPLAY ]
+then
+	cmd="gnome-terminal"
+	cmd_e="--command "
+elif [ ! -z $TMUX ]
+then
+	cmd="tmux split-window"
+	cmd_e=""
+else
+	echo "xterm: This environment can not support xterm emulation" >&2
+	exit 1
+fi
+
+while [ $# -gt 0 ]
+do
+	case $state in
+	open)
+		case $1 in
+		-title)
+			state=title
+			;;
+		-e)
+			cmd="$cmd $cmd_e '"
+			state=command
+		esac
+		;;
+	command)
+		cmd="$cmd$1"
+		state=continuation
+		;;
+	continuation)
+		cmd="$cmd $1"
+		;;
+	title)
+		# Option "--title" is no longer supported in latest version
+		# of gnome-terminal (but having written the argument handling
+		# we'll keep that).
+		#cmd="$cmd --title '$1'"
+		state=open
+		;;
+	esac
+
+	shift
+done
+
+if [ $state = continuation ]
+then
+	cmd="$cmd'"
+fi
+
+echo "Launching: $cmd"
+eval $cmd
