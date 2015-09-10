@@ -1,0 +1,6 @@
+#!/usr/bin/env hbcxx
+
+// hbcxx can be downloaded from https://github.com/daniel-thompson/hbcxx
+
+#! source: ../src/tstamp.c
+#! -lutil
