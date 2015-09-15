@@ -213,4 +213,6 @@ try:
 	sys.exit(main(sys.argv))
 except KBError as e:
 	print(e)
+except KeyboardInterrupt:
+	sys.exit(1)
 sys.exit(127)
