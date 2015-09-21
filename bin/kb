@@ -23,9 +23,16 @@ class KnowledgeBase:
 			if k.lower() in f.lower():
 				candidates.append(f)
 
-		shortlist = [ c for c in candidates if c.startswith(k) ]
+
+		# First match is a case insensitive match on whole filename (before the .) ...
+		shortlist = [ c for c in candidates if c.lower().startswith(k.lower()+'.') ]
+		# ... then on case sensitive prefix ...
 		if not shortlist:
-			shortlist = [c for c in candidates if c.lower().startswith(k.lower())]
+			shortlist = [ c for c in candidates if c.startswith(k) ]
+		# ... then on case insensitive prefix ...
+		if not shortlist:
+			shortlist = [ c for c in candidates if c.lower().startswith(k.lower()) ]
+		# ... then on case insensitive substring match
 		if not shortlist:
 			shortlist = candidates
 
