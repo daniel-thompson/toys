@@ -14,6 +14,21 @@ then
 	shift
 fi
 
+# If DISPLAY is not set then we cannot have a gvim server and we can
+# just fallback to regular vim
+if [ -z $DISPLAY ]
+then
+	exec vim "$@"
+fi
+
+# If TMUX is set and the fullscreen open is set then we also fallback to
+# regular vim
+if [ ! -z $TMUX ] && tmux show -gv @fullscreen > /dev/null 2> /dev/null
+then
+	exec vim "$@"
+fi
+
+
 serverlist=`gvim --serverlist`
 
 uppercase () {
