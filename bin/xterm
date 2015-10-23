@@ -14,8 +14,16 @@ state=open
 
 if [ ! -z $DISPLAY ]
 then
-	cmd="gnome-terminal"
-	cmd_e="--command "
+	# We have display set but lets make sure we haven't been asked to
+	# run in a fullscreen tmux session
+	if [ ! -z $TMUX ] && tmux show -gv @fullscreen > /dev/null 2> /dev/null
+	then
+		cmd="tmux split-window"
+		cmd_e=""
+	else
+		cmd="gnome-terminal"
+		cmd_e="--command "
+	fi
 elif [ ! -z $TMUX ]
 then
 	cmd="tmux split-window"
