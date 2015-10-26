@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+#
+# monitor ping response and report results
+#
+
+import datetime
+import re
+import subprocess
+import sys
+import time
+
+csv = False
+if csv:
+	fmt = '{},{},{},{},{},{},{},{},{}'
+	sep = ','
+else:
+	fmt = '{}  Got {:>3} of {:>3}  Lost{:>3}  rtt {}/{}/{}/{} ms'
+	sep = ' '
+
+def ping(address):
+	now = datetime.datetime.now().replace(microsecond=0)
+
+	stats = subprocess.check_output(
+			['ping', '-i0.2', '-c100', '-w 30', '-q', address])
+	stats = stats.decode(encoding='UTF-8')
+
+	m = re.search(
+		'([0-9]+) packets transmitted, ([0-9]+) received, ([0-9]+)% packet loss, time ([0-9]+)ms',
+		stats)
+	(tx, rx, loss, time) = [ int(x) for x in m.groups() ]
+
+	m = re.search(
+		'rtt min/avg/max/mdev = ([0-9.]+)/([0-9.]+)/([0-9.]+)/([0-9.]+) ms',
+		stats)
+	(min, avg, max, mdev) = m.groups()
+
+	print(fmt.format(now.isoformat(sep), rx, tx, loss, min, avg, max, mdev))
+
+if len(sys.argv) != 2:
+	print("Usage: monitor-ping <address>\n", file=sys.stderr)
+	sys.exit(1)
+	
+start_time = time.time()
+alarm = start_time
+while True:
+	if alarm < time.time():
+		ping(sys.argv[1])
+		alarm += 60
+
+	wakeup = alarm - time.time()
+	if wakeup > 0:
+		time.sleep(wakeup)
+
