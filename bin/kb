@@ -8,7 +8,7 @@
 
 import os, re, subprocess, tempfile, sys
 
-KB = '/home/drt/Documents/Wiki'
+KB = os.environ['HOME'] + '/Documents/Wiki'
 
 MD_H_RE = '^ {0,3}(#+)(?P<heading>[^#]+)#*$'
 MD_CODE_BLOCK_RE = '^ {0,3}[`~][`~][`~] *(?P<language>[^` ]*) *(?P<comment>[^`]*)$'
