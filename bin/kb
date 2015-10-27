@@ -46,13 +46,12 @@ class KnowledgeBase:
 		# Give up if we cannot identify a unique finalist
 		if len(shortlist) == 0:
 			raise KBError('No knowledge found for {}'.format(k))
-			raise KBError(msg)
-		elif len(shortlist) == 1:
-			self.kb = shortlist[0]
-			self.key = k
-		else:
-			msg = ['Too much knowledge found for {}'.format(k)]
-			raise KBError('\n  '.join(msg + shortlist))
+		elif len(shortlist) > 1:
+			msg = 'Too much knowledge found for {}'.format(k)
+			raise KBError('\n  '.join([msg] + shortlist))
+
+		self.kb = shortlist[0]
+		self.key = k
 
 	def open(self):
 		return open(KB + os.sep + self.kb, 'r')
