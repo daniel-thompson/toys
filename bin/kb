@@ -19,23 +19,31 @@ class KBError(Exception):
 class KnowledgeBase:
 	def __init__(self, k):
 		candidates = []
+
+		# For case (and space) insensitive comparisons
+		normalize = lambda s: s.replace('-', ' ').replace('_', ' ').lower()
+
+		# Generate a comprehensive list of possible candidates,
+		# we will reduce this down to a short list in a moment.
 		for f in os.listdir(KB):
-			if k.lower() in f.lower():
+			if normalize(k) in normalize(f):
 				candidates.append(f)
 
-
 		# First match is a case insensitive match on whole filename (before the .) ...
-		shortlist = [ c for c in candidates if c.lower().startswith(k.lower()+'.') ]
+		shortlist = [ c for c in candidates if
+				normalize(c).startswith(normalize(k)+'.') ]
 		# ... then on case sensitive prefix ...
 		if not shortlist:
 			shortlist = [ c for c in candidates if c.startswith(k) ]
 		# ... then on case insensitive prefix ...
 		if not shortlist:
-			shortlist = [ c for c in candidates if c.lower().startswith(k.lower()) ]
+			shortlist = [ c for c in candidates if
+					normalize(c).startswith(normalize(k)) ]
 		# ... then on case insensitive substring match
 		if not shortlist:
 			shortlist = candidates
 
+		# Give up if we cannot identify a unique finalist
 		if len(shortlist) == 0:
 			raise KBError('No knowledge found for {}'.format(k))
 			raise KBError(msg)
