@@ -90,9 +90,11 @@ Built-in actions:
 			print('  {:<18}{}'.format(b, builtin[b][1]))
 
 		if len(actions) == 0:
-			print('\nNo {} specific actions are available'.format(self.kb))
+			print('\nNo {} (from {}) specific actions are available'.format(
+					self.key, self.kb))
 		else:
-			print('\nActions specific to {}:\n'.format(self.kb))
+			print('\nActions specific to {} (from {}):\n'.format(
+					self.key, self.kb))
 			for a in actions:
 				print('  {:<18}{}'.format(a[0], a[1]))
 		print('')
