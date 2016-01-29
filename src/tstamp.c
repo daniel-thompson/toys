@@ -91,14 +91,13 @@ int poll_with_stopwatch(int fd)
 }
 
 
-uint64_t show_timestamp(uint64_t start, uint64_t prev)
+void show_timestamp(uint64_t start, uint64_t prev, uint64_t now)
 {
-	uint64_t now = time_now();
 	uint64_t stamp = now - start;
 	uint64_t delta = now - prev;
 
 	if (options.no_stamp)
-		return now;
+		return;
 
 	if (options.delta)
 		printf("[%5" PRIu64 ".%06" PRIu64
@@ -108,8 +107,6 @@ uint64_t show_timestamp(uint64_t start, uint64_t prev)
 	else
 		printf("[%5" PRIu64 ".%06" PRIu64 "] ",
 		       stamp / 1000000, stamp % 1000000);
-
-	return now;
 }
 
 void timestamp(int fd)
@@ -125,9 +122,11 @@ void timestamp(int fd)
 
 	while ((remaining = read(fd, buf, sizeof(buf))) > 0) {
 		char *p = buf;
+		uint64_t now = time_now();
 		while (remaining > 0) {
 			if (tstamp) {
-				prev = show_timestamp(start, prev);
+				show_timestamp(start, prev, now);
+				prev = now;
 				tstamp = false;
 			}
 
