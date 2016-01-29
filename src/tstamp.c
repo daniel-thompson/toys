@@ -131,10 +131,10 @@ void timestamp(int fd)
 			}
 
 			char *q = (char *) memchr(p, '\n', remaining);
-			tstamp = q;
-			size_t show = tstamp ? q - p + 1 : remaining;
+			size_t show = q ? q - p + 1 : remaining;
 			fwrite(p, show, 1, stdout);
 
+			tstamp = q;
 			remaining -= show;
 			p += show;
                 }
