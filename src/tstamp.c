@@ -57,7 +57,7 @@ uint64_t time_now()
 	return (now.tv_sec * 1000000ull) + (now.tv_nsec / 1000);
 }
 
-int poll_with_stopwatch(int fd)
+int poll_with_stopwatch(int fd, uint64_t epoch)
 {
 	struct pollfd fds[1] = { { .fd = fd, .events = POLLIN } };
 	int res;
@@ -77,8 +77,18 @@ int poll_with_stopwatch(int fd)
 			fflush(stdout);
 			olddelta = delta;
 
-			if (options.watchdog && options.watchdog > delta)
+			if (options.watchdog && delta > options.watchdog) {
+				uint64_t stamp = time_now() - epoch;
+				printf("\n[%5" PRIu64 ".%06" PRIu64
+				       "] WATCHDOG EXPIRED; Terminating...\n",
+				       stamp / 1000000, stamp % 1000000);
+
+				/* exit causes the pty file descriptors to be
+				 * cleaned up... the supervised process won't
+				 * last long after that!
+				 */
 				exit(10);
+			}
 		}
 
 	} while ((res = poll(fds, lengthof(fds), 200)) == 0);
@@ -118,7 +128,7 @@ void timestamp(int fd)
 	uint64_t start = time_now();
 	uint64_t prev = start;
 
-	poll_with_stopwatch(fd);
+	poll_with_stopwatch(fd, start);
 
 	while ((remaining = read(fd, buf, sizeof(buf))) > 0) {
 		char *p = buf;
@@ -139,7 +149,7 @@ void timestamp(int fd)
 			p += show;
                 }
 
-		poll_with_stopwatch(fd);
+		poll_with_stopwatch(fd, start);
 	}
 
 	if (remaining < 0 && errno != EIO)
