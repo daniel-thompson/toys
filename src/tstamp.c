@@ -178,7 +178,14 @@ int main(int argc, char *argv[])
 		case 'h':
 		default:
 			fprintf(stderr,
-				"USAGE: tstamp [OPTIONS] cmd arg...\n");
+"USAGE: tstamp [OPTIONS] cmd arg...\n"
+"\n"
+"  -d, --delta          Show elapsed time between output\n"
+"  -h, --help           Show this help, then exit\n"
+"  -n, --no-stamp       Do not show timestamps (timeout reporting only)\n"
+"  -w, --watchdog=SECS  Terminate if sub-process is unresponsive for SECS\n"
+"\n"
+				);
 			exit(1);
 			break;
 		}
