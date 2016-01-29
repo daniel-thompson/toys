@@ -137,9 +137,9 @@ void timestamp(int fd)
 
 			remaining -= show;
 			p += show;
-
-			poll_with_stopwatch(fd);
                 }
+
+		poll_with_stopwatch(fd);
 	}
 
 	if (remaining < 0 && errno != EIO)
