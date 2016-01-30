@@ -1,0 +1,24 @@
+#
+# A ssh based implementation of notify-send
+#
+# Repackages the arguments and passes everything via ssh to
+# the system you connected from.
+#
+
+# Use the default implementation if we aren't connected via SSH
+# (or if X11 forwarding is disabled)
+if [ -z "$SSH_CLIENT" ] || [ "${DISPLAY%%:*}" != localhost ]
+then
+	exec /usr/bin/notify-send "$@"
+fi
+
+display_host=`echo $SSH_CLIENT | cut -f1 -d' '`
+
+quote_args=''
+for arg in "$@"
+do
+	arg=$(printf "%q" "$arg")
+	quote_args="${quote_args} $arg"
+done
+
+exec ssh $display_host "notify-receive ${quote_args}"

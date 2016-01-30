@@ -1,0 +1,29 @@
+#!/bin/sh
+
+#
+# Script to support remote notify-send implementations
+#
+# Study the running processes to discover a suitable value for
+# DBUS_SESSION_BUS_ADDRESS and use that to issue a notification.
+#
+
+# Simple helper to make it easier to parse a processes environment
+envof() {
+	sed 's/\x0/\n/g' /proc/$1/environ 2> /dev/null
+}
+
+# Work through all the users process until we find one that is using
+# dbus.
+for pid in `ps --no-headers --format pid --user $USER`
+do
+	dbus=`envof $pid | grep '^DBUS_SESSION_BUS_ADDRESS='`
+
+	if [ ! -z $dbus ]
+	then
+		break
+	fi
+done
+
+export DBUS_SESSION_BUS_ADDRESS=`echo $dbus | cut -f2- -d=`
+
+exec notify-send "$@"
