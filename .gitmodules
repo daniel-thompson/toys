@@ -1,3 +1,6 @@
 [submodule "vim"]
 	path = vim
 	url = https://github.com/daniel-thompson/toys-vim.git
+[submodule "undistract-me"]
+	path = undistract-me
+	url = https://github.com/jml/undistract-me.git
