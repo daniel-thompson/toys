@@ -222,8 +222,32 @@ def main(argv):
 		return builtin[argv[1]][0](argv[2:])
 	else:
 		if len(argv) < 3:
+			if len(argv) == 2:
+				# Let's see if we can lookup the command in misc
+				try:
+					return do_run(['misc', argv[1]])
+				except KBError:
+					pass
 			raise KBError("Missing arguments. Try 'kb help'.")
-		return do_run([argv[2], argv[1]] + argv[3:])
+
+		try:
+			return do_run([argv[2], argv[1]] + argv[3:])
+		except KBError:
+			# Let's see if we can lookup the command in the misc
+			# topic. It is a bit hacky to rely on exceptions for
+			# this but this is quicker than rewriting the way error
+			# reporting happens...
+			try:
+				return do_run(['misc'] + argv[1:])
+			except KBError as e:
+				# We'll ignore this exception and re-raise the
+				# original (i.e. the error message we show to
+				# the user will not be based on us trying to
+				# fixup their input)
+				print(e)
+				pass
+			raise
+
 
 try:
 	sys.exit(main(sys.argv))
