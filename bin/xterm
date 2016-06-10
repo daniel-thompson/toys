@@ -47,11 +47,11 @@ do
 		esac
 		;;
 	command)
-		cmd="$cmd$1"
+		cmd="$cmd\"$1\""
 		state=continuation
 		;;
 	continuation)
-		cmd="$cmd $1"
+		cmd="$cmd \"$1\""
 		;;
 	title)
 		# Option "--title" is no longer supported in latest version
