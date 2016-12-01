@@ -21,8 +21,12 @@ else:
 def ping(address):
 	now = datetime.datetime.now().replace(microsecond=0)
 
-	stats = subprocess.check_output(
-			['ping', '-i0.2', '-c100', '-w 30', '-q', address])
+	try:
+		stats = subprocess.check_output(
+				['ping', '-i0.2', '-c100', '-w 30', '-q', address])
+	except subprocess.CalledProcessError:
+		print('{}  No reply (network is down?)'.format(now.isoformat(' ')))
+		return
 	stats = stats.decode(encoding='UTF-8')
 
 	m = re.search(
