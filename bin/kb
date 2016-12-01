@@ -29,6 +29,10 @@ class KnowledgeBase:
 			if normalize(k) in normalize(f):
 				candidates.append(f)
 
+		# Disregard hidden files and obvious editor backup files
+		candidates = [ c for c in candidates if not c.startswith('.') ]
+		candidates = [ c for c in candidates if not c.endswith('~') ]
+
 		# First match is a case insensitive match on whole filename (before the .) ...
 		shortlist = [ c for c in candidates if
 				normalize(c).startswith(normalize(k)+'.') ]
