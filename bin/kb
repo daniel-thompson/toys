@@ -231,7 +231,13 @@ def main(argv):
 				try:
 					return do_run(['misc', argv[1]])
 				except KBError:
-					pass
+					# Final chance! Try using the current
+					# directory name to generate a command.
+					try:
+						_, needle = os.getcwd().split('-')
+						return do_run([needle, argv[1]])
+					except (ValueError, KBError) as e:
+						pass
 			raise KBError("Missing arguments. Try 'kb help'.")
 
 		try:
