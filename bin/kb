@@ -122,9 +122,9 @@ Built-in actions:
 		activated = False
 		cmds = []
 
-		f = self.open()
-
-		for ln in f.readlines():
+		with self.open() as f:
+			lines = f.readlines()
+		for ln in lines:
 			ln = ln.rstrip()
 
 			m = re.match(MD_CODE_BLOCK_RE, ln)
@@ -140,8 +140,6 @@ Built-in actions:
 			if activated:
 				cmds.append(ln)
 
-		f.close()
-
 		if len(cmds) == 0:
 			raise KBError("{} has no {} action. Try 'kb {} help'.".format(self.kb, action, self.key))
 
@@ -149,14 +147,10 @@ Built-in actions:
 			print('\n'.join(cmds))
 			return
 
-		f = tempfile.NamedTemporaryFile(prefix='tmp_kb_',
-				suffix='.sh', delete=False)
-		f.writelines([bytes(c+'\n', 'ascii') for c in cmds])
-		f.close()
-		retval = subprocess.call(
-				[os.environ['SHELL'], '-ex', f.name]
-				+ argv)
-		os.unlink(f.name)
+		with tempfile.NamedTemporaryFile(prefix='tmp_kb_', suffix='.sh') as f:
+			f.writelines([bytes(c+'\n', 'ascii') for c in cmds])
+			f.flush()
+			retval = subprocess.call( [os.environ['SHELL'], '-ex', f.name] + argv)
 
 		return retval
 
