@@ -12,6 +12,12 @@
 
 state=open
 
+if [ ! -z XTERM_IS_NOP ]
+then
+	echo "$@"
+	exit 0
+done
+
 if [ ! -z $DISPLAY ]
 then
 	# We have display set but lets make sure we haven't been asked to
