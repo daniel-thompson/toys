@@ -253,7 +253,6 @@ def main(argv):
 				# original (i.e. the error message we show to
 				# the user will not be based on us trying to
 				# fixup their input)
-				print(e)
 				pass
 			raise
 
