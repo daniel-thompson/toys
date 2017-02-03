@@ -233,8 +233,8 @@ def main(argv):
 					# Final chance! Try using the current
 					# directory name to generate a command.
 					try:
-						_, needle = os.getcwd().split('-')
-						return do_run([needle, argv[1]])
+						fragments = os.getcwd().split('-')
+						return do_run([fragments[-1], argv[1]])
 					except (ValueError, KBError) as e:
 						pass
 			raise KBError("Missing arguments. Try 'kb help'.")
