@@ -143,6 +143,7 @@ void timestamp(int fd)
 			char *q = (char *) memchr(p, '\n', remaining);
 			size_t show = q ? q - p + 1 : remaining;
 			fwrite(p, show, 1, stdout);
+			fflush(stdout);
 
 			tstamp = q;
 			remaining -= show;
