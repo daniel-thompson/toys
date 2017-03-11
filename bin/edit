@@ -7,29 +7,41 @@
 #
 
 unset nofork
+unset nogui
+gvim=gvim
 
 if [ "$1" = "--nofork" ]
 then
-	nofork=1
+	nofork="$1"
 	shift
 fi
 
-# If DISPLAY is not set then we cannot have a gvim server and we can
-# just fallback to regular vim
+# If DISPLAY is not set then we can cannot have a gvim server but
+# we try to fallback using DBus before giving up and using vim
 if [ -z $DISPLAY ]
 then
-	exec vim "$@"
+	nogui=1
 fi
 
 # If TMUX is set and the fullscreen open is set then we also fallback to
 # regular vim
 if [ ! -z $TMUX ] && tmux show -gv @fullscreen > /dev/null 2> /dev/null
 then
-	exec vim "$@"
+	nogui=1
+fi
+
+if [ ! -z $nogui ]
+then
+	if [ -z `which dvim` ] || [ ! -z $nofork ]
+	then
+		exec vim "$@"
+	fi
+
+	gvim="dvim"
 fi
 
 
-serverlist=`gvim --serverlist`
+serverlist=`$gvim --serverlist`
 
 uppercase () {
 	echo "$@" | tr a-z A-Z
@@ -71,20 +83,15 @@ then
 	then
 		if [ -z $nofork ]
 		then
-			gvim --servername "$server" --remote-tab "$@"
+			$gvim --servername "$server" --remote-tab "$@"
 		else
 			echo Waiting for tab to close... 
-			gvim --servername "$server" --remote-tab-wait "$@"
+			$gvim --servername "$server" --remote-tab-wait "$@"
 		fi
 	else
-		gvim --servername "$server" --remote-send '<ESC>:tabnew<CR>:call foreground()<CR>'
+		$gvim --servername "$server" --remote-send '<ESC>:tabnew<CR>:call foreground()<CR>'
 	fi
 else
-	if [ -z $nofork ]
-	then
-		gvim --servername "$server" "$@"
-	else
-		echo Waiting for editor to close...
-		gvim --nofork --servername "$server" "$@"
-	fi
+	[ -z $nofork ] || echo Waiting for editor to close...
+		$gvim $nofork --servername "$server" "$@"
 fi
