@@ -12,11 +12,11 @@
 
 state=open
 
-if [ ! -z XTERM_IS_NOP ]
+if [ "$XTERM_IS_NOP" = "y" ]
 then
-	echo "$@"
+	echo Ignoring: $0 "$@"
 	exit 0
-done
+fi
 
 if [ ! -z $DISPLAY ]
 then
