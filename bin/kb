@@ -161,6 +161,8 @@ def do_dryrun(argv):
 
 def do_edit(argv):
 	try:
+		if len(argv) == 0:
+			return KnowledgeBase('index').do_edit()
 		return KnowledgeBase(argv[0]).do_edit(argv[1:])
 	except KBError as e:
 		if not str(e).startswith('No knowledge found'):
