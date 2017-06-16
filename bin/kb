@@ -18,6 +18,18 @@ KB = os.environ['HOME'] + '/Documents/Wiki'
 MD_H_RE = '^ {0,3}(#+)(?P<heading>[^#]+)#*$'
 MD_CODE_BLOCK_RE = '^ {0,3}[`~][`~][`~] *(?P<language>[^` ]*) *(?P<comment>[^`]*)$'
 
+def editor():
+	preferred = [ os.environ.get('EDITOR'), 'vi' ]
+	xdg_session_type = os.environ.get('XDG_SESSION_TYPE')
+	if xdg_session_type == 'wayland':
+		preferred.insert(0, os.environ.get('WINEDITOR'))
+		preferred.insert(0, os.environ.get('XEDITOR'))
+	elif xdg_session_type == 'x11' or os.environ.get('DISPLAY'):
+		preferred.insert(0, os.environ.get('XEDITOR'))
+		preferred.insert(0, os.environ.get('WINEDITOR'))
+
+	return [ x for x in preferred if x ][0]
+
 class KBError(Exception):
 	pass
 
@@ -65,8 +77,8 @@ class KnowledgeBase:
 	def open(self):
 		return open(KB + os.sep + self.kb, 'r')
 
-	def do_edit(self, argv):
-		return subprocess.call(['edit'] + argv + [KB+os.sep+self.kb])
+	def do_edit(self, argv=[]):
+		return subprocess.call([editor()] + argv + [KB+os.sep+self.kb])
 
 	def do_help(self):
 		f = self.open()
@@ -172,7 +184,7 @@ def do_edit(argv):
 	except:
 		# Assume markdown if there is no index
 		extension = '.md'
-	return subprocess.call(['edit'] + [KB+os.sep+argv[0]+extension])
+	return subprocess.call([editor()] + [KB+os.sep+argv[0]+extension])
 
 
 def do_grep(argv):
