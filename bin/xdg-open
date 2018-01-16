@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#
+# Intercept xdg-open for non-GUI sessions and try out best to
+# handle the file.
+#
+
+# Use DISPLAY to detect desktop sessions (where xdg-open can work OK).
+# TODO: There's a good chance that this is bogus!
+if [ ! -z "$DISPLAY" ]
+then
+	exec /usr/bin/xdg-open "$@"
+fi
+
+for i in "$@"
+do
+	i="${i#file://}"
+
+	case "$i" in
+	*.eml)
+		formail -b < "$i" > $HOME/.mbox
+		tmux split-window mutt -Rf $HOME/.mbox
+		;;
+	*)
+		tmux split-window view "$i"
+		;;
+
+	esac
+done
