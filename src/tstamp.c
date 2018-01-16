@@ -33,6 +33,7 @@
 
 static struct {
 	bool no_stamp;
+	bool clock;
 	bool delta;
 	unsigned int watchdog;
 } options;
@@ -109,14 +110,19 @@ void show_timestamp(uint64_t start, uint64_t prev, uint64_t now)
 	if (options.no_stamp)
 		return;
 
-	if (options.delta)
-		printf("[%5" PRIu64 ".%06" PRIu64
-		       " +%" PRIu64 ".%06" PRIu64 "] ",
-		       stamp / 1000000, stamp % 1000000,
-		       delta / 1000000, delta % 1000000);
+	unsigned int seconds = stamp / 1000000;
+	unsigned int microseconds = stamp % 1000000;
+
+	if (options.clock)
+		printf("[%02u:%02u:%02u.%06u] ", 
+			seconds / 3600, (seconds % 3600) / 60, seconds % 60,
+			microseconds);
+	else if (options.delta)
+		printf("[%5u.%06u  +%u.%06u] ", seconds, microseconds,
+		       (unsigned int) (delta / 1000000),
+		       (unsigned int) (delta % 1000000));
 	else
-		printf("[%5" PRIu64 ".%06" PRIu64 "] ",
-		       stamp / 1000000, stamp % 1000000);
+		printf("[%5u.%06u] ", seconds, microseconds);
 }
 
 void timestamp(int fd)
@@ -160,6 +166,7 @@ void timestamp(int fd)
 int main(int argc, char *argv[])
 {
 	const static struct option opts[] = {
+		{ "clock", no_argument, 0, 'c' },
 		{ "delta", no_argument, 0, 'd' },
 		{ "help", no_argument, 0, 'h' },
 		{ "no-stamp", no_argument, 0, 'n' },
@@ -171,8 +178,12 @@ int main(int argc, char *argv[])
 	int c;
 	int digit_optind = 0;
 
-	while ((c = getopt_long(argc, argv, "+dhnw:", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "+cdhnw:", opts, NULL)) != -1) {
 		switch (c) {
+		case 'c':
+			options.clock = true;
+			break;
+
 		case 'd':
 			options.delta = true;
 			break;
@@ -190,6 +201,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr,
 "USAGE: tstamp [OPTIONS] cmd arg...\n"
 "\n"
+"  -c, --clock          Issue timestamps in 00:00:00.000000 format\n"
 "  -d, --delta          Show elapsed time between output\n"
 "  -h, --help           Show this help, then exit\n"
 "  -n, --no-stamp       Do not show timestamps (timeout reporting only)\n"
