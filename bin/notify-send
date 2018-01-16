@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #
 # A ssh based implementation of notify-send
 #
