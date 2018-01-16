@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#
+# todo
+#
+# Command line TODO list manipulation
+#
+
+# Don't overwrite existing files
+set -o noclobber
+
+# Absorb stdin
+message=$(cat)
+
+# Get (the first line of) the subject and make it safe as a filename
+subject=$(<<<"$message" grep -oPm 1 '^Subject: ?\K.*' | sed 's,/,-,g')
+if [ -z "$subject" ]
+then
+	echo ERROR: Cannot derive a filename
+fi
+
+echo "${message}" > "$HOME/Documents/Wiki/todo/$subject.eml" && echo Recorded action as "$subject.eml"
