@@ -14,6 +14,8 @@
  *     gcc -Wall -Os tstamp.c -o tstamp -lutil
  */
 
+//#! -Wall
+
 #include <errno.h>
 #include <inttypes.h>
 #include <stdarg.h>
@@ -38,7 +40,7 @@ static struct {
 	unsigned int watchdog;
 } options;
 
-void die(const char *fmt, ...)
+static void die(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -49,7 +51,7 @@ void die(const char *fmt, ...)
 	exit(1);
 }
 
-uint64_t time_now()
+static uint64_t time_now()
 {
 	struct timespec now;
 
@@ -182,23 +184,22 @@ int main(int argc, char *argv[])
 
 	int fd;
 	int c;
-	int digit_optind = 0;
 
 	while ((c = getopt_long(argc, argv, "+cdhnw:", opts, NULL)) != -1) {
 		switch (c) {
-		case 'c':
+		case 'c': // --clock
 			options.clock = true;
 			break;
 
-		case 'd':
+		case 'd': // --delta
 			options.delta = true;
 			break;
 
-		case 'n':
+		case 'n': // --no-stamp
 			options.no_stamp = true;
 			break;
 
-		case 'w':
+		case 'w': // --watchdog
 			options.watchdog = strtoul(optarg, NULL, 10);
 			break;
 
