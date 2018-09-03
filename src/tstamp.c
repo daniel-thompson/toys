@@ -38,6 +38,7 @@ static struct {
 	bool clock;
 	bool delta;
 	unsigned int watchdog;
+	FILE *logfile;
 } options;
 
 static void die(const char *fmt, ...)
@@ -49,6 +50,24 @@ static void die(const char *fmt, ...)
 	va_end(ap);
 
 	exit(1);
+}
+
+static int logprintf(const char *fmt, ...)
+{
+	va_list ap;
+	int res;
+
+	va_start(ap, fmt);
+	res = vprintf(fmt, ap);
+	va_end(ap);
+
+	if (res >= 0 && options.logfile) {
+		va_start(ap, fmt);
+		res = vfprintf(options.logfile, fmt, ap);
+		va_end(ap);
+	}
+
+	return res;
 }
 
 static uint64_t time_now()
@@ -80,6 +99,9 @@ int poll_with_stopwatch(int fd, uint64_t epoch)
 			while (scrub-- > 0)
 				printf("\b \b");
 
+			/* stopwatch messages are not logged since they are
+			 * only really useful during interactive use
+			 */
 			scrub = printf("[No output for %02u:%02u:%02u seconds]",
 			       delta / 3600, (delta / 60) % 60, delta % 60);
 			fflush(stdout);
@@ -87,7 +109,7 @@ int poll_with_stopwatch(int fd, uint64_t epoch)
 
 			if (options.watchdog && delta > options.watchdog) {
 				uint64_t stamp = time_now() - epoch;
-				printf("\n[%5" PRIu64 ".%06" PRIu64
+				logprintf("\n[%5" PRIu64 ".%06" PRIu64
 				       "] WATCHDOG EXPIRED; Terminating...\n",
 				       stamp / 1000000, stamp % 1000000);
 
@@ -122,15 +144,15 @@ void show_timestamp(uint64_t start, uint64_t prev, uint64_t now)
 	unsigned int microseconds = stamp % 1000000;
 
 	if (options.clock)
-		printf("[%02u:%02u:%02u.%06u] ", 
+		logprintf("[%02u:%02u:%02u.%06u] ",
 			seconds / 3600, (seconds % 3600) / 60, seconds % 60,
 			microseconds);
 	else if (options.delta)
-		printf("[%5u.%06u  +%u.%06u] ", seconds, microseconds,
+		logprintf("[%5u.%06u  +%u.%06u] ", seconds, microseconds,
 		       (unsigned int) (delta / 1000000),
 		       (unsigned int) (delta % 1000000));
 	else
-		printf("[%5u.%06u] ", seconds, microseconds);
+		logprintf("[%5u.%06u] ", seconds, microseconds);
 }
 
 void timestamp(int fd)
@@ -158,6 +180,8 @@ void timestamp(int fd)
 			size_t show = q ? q - p + 1 : remaining;
 			fwrite(p, show, 1, stdout);
 			fflush(stdout);
+			if (options.logfile)
+				fwrite(p, show, 1, options.logfile);
 
 			tstamp = q;
 			remaining -= show;
@@ -177,6 +201,7 @@ int main(int argc, char *argv[])
 		{ "clock", no_argument, 0, 'c' },
 		{ "delta", no_argument, 0, 'd' },
 		{ "help", no_argument, 0, 'h' },
+		{ "log", required_argument, 0, 'l' },
 		{ "no-stamp", no_argument, 0, 'n' },
 		{ "watchdog", required_argument, 0, 'w' },
 		{ 0 }
@@ -193,6 +218,13 @@ int main(int argc, char *argv[])
 
 		case 'd': // --delta
 			options.delta = true;
+			break;
+
+		case 'l': // --log
+			options.logfile = fopen(optarg, "w");
+			if (!options.logfile)
+				die("Cannot open '%s' (%s)\n", optarg,
+				    strerror(errno));
 			break;
 
 		case 'n': // --no-stamp
