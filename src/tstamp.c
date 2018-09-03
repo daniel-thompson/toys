@@ -62,6 +62,7 @@ int poll_with_stopwatch(int fd, uint64_t epoch)
 {
 	struct pollfd fds[1] = { { .fd = fd, .events = POLLIN } };
 	int res;
+	int scrub = 0;
 
 	uint64_t start = time_now();
 	uint64_t olddelta = 0;
@@ -73,7 +74,11 @@ int poll_with_stopwatch(int fd, uint64_t epoch)
 	do {
 		unsigned int delta = (time_now() - start) / 1000000;
 		if (delta != olddelta) {
-			printf("\r[No output for %02u:%02u:%02u seconds]",
+			/* clear away any existing stopwatch message */
+			while (scrub-- > 0)
+				printf("\b \b");
+
+			scrub = printf("[No output for %02u:%02u:%02u seconds]",
 			       delta / 3600, (delta / 60) % 60, delta % 60);
 			fflush(stdout);
 			olddelta = delta;
@@ -95,7 +100,8 @@ int poll_with_stopwatch(int fd, uint64_t epoch)
 	} while ((res = poll(fds, lengthof(fds), 200)) == 0);
 
 	/* clear away the stopwatch message */
-	printf("\r                                      \r");
+	while (scrub-- > 0)
+		printf("\b \b");
 	fflush(stdout);
 
         return res;
