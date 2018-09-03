@@ -44,7 +44,7 @@ fi
 serverlist=`$gvim --serverlist`
 
 uppercase () {
-	echo "$@" | tr a-z A-Z
+	echo "$@" | tr a-z- A-Z_
 }
 
 server_exists () {
