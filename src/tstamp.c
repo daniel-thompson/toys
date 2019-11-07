@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 	int fd;
 	int c;
 
-	while ((c = getopt_long(argc, argv, "+cdhnw:", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "+cdhl:nw:", opts, NULL)) != -1) {
 		switch (c) {
 		case 'c': // --clock
 			options.clock = true;
@@ -243,6 +243,7 @@ int main(int argc, char *argv[])
 "  -c, --clock          Issue timestamps in 00:00:00.000000 format\n"
 "  -d, --delta          Show elapsed time between output\n"
 "  -h, --help           Show this help, then exit\n"
+"  -l, --log=FILENAME	Copy output to a log file\n"
 "  -n, --no-stamp       Do not show timestamps (timeout reporting only)\n"
 "  -w, --watchdog=SECS  Terminate if sub-process is unresponsive for SECS\n"
 "\n"
