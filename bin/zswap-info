@@ -1,0 +1,24 @@
+#!/bin/sh
+
+bars () {
+	printf "%$1s" "" | tr ' ' '|'
+}
+
+present () {
+}
+
+chart () {
+	label="$1"
+	usage="$2"
+	total="$3"
+
+	labelsz = 5
+	summarysz = 11
+
+	graphsz=$(($COLUMNS-3-$labelsz-$summarysz))
+
+	nbars=`echo $usage * $summarysz / $total | bc`
+	printf "%-5s[%-${graphsz}s] $label `bars $nbars`
+}
+
+
