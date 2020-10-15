@@ -1,16 +1,70 @@
 #!/bin/bash
 
 #
-# Intercept xdg-open for non-GUI sessions and try out best to
-# handle the file.
+# Intercept xdg-open for both GUI and non-GUI sessions and try our best
+# to handle the file.
 #
 
-# Use DISPLAY to detect desktop sessions (where xdg-open can work OK).
-# TODO: There's a good chance that this is bogus!
-if [ ! -z "$DISPLAY" ]
-then
-	exec /usr/bin/xdg-open "$@"
-fi
+set -x
+
+startswith () {
+	[ "$1" != "${1#$2}" ]
+}
+
+endswith () {
+	[ "$1" != "${1%$2}" ]
+}
+
+do-xdg-open () {
+	# This is a mutt+firejail workaround. We need to copy temporary
+	# files to somewhere on the filesystem that a sandboxed web
+	# browser will actually be able to load.
+	if startswith "$1" /tmp/ && [ `file --brief --mime-type "$1"` == 'text/html' ]
+	then
+		echo "Deploying mutt+firejail workaround"
+		fname="$HOME/.mozilla/tmp/`basename $1 .html`".html
+		mkdir -p "`dirname "$fname"`"
+		cp "$1" "$fname"
+		do-xdg-open file://"$fname"
+		R=$?
+		rm -f "$fname"
+		return $R
+	fi
+
+	END=$(($SECONDS + 5))
+
+	/usr/bin/xdg-open "$@"
+	R=$?
+
+	# If xdg-open exited very fast then whatever program it
+	# launched may not have had time to grab a file handle yet.
+	# Let's wait a bit to be sure...
+	NOW=$SECONDS
+	if [ $NOW -lt $END ]
+	then
+		printf "Waiting for helper to open file ..."
+		sleep $(($END - $NOW))
+		echo " ok"
+	fi
+
+	return $R
+}
+
+do-gnome-terminal () {
+	gnome-terminal --quiet --wait -- "$@"
+
+}
+
+do-tmux-split () {
+	tmux split-window "$@"
+}
+
+# Currently we use DISPLAY to detect desktop sessions (where we assume
+# xdg-open will work OK). Eventually this will break but it is enough
+# for now...
+has-gui () {
+	[ ! -z $DISPLAY ]
+}
 
 for i in "$@"
 do
@@ -19,10 +73,20 @@ do
 	case "$i" in
 	*.eml)
 		formail -b < "$i" > $HOME/.mbox
-		tmux split-window mutt -Rf $HOME/.mbox
+		if has-gui
+		then
+			do-gnome-terminal mutt -Rf $HOME/.mbox
+		else
+			do-tmux-split mutt -Rf $HOME/.mbox
+		fi
 		;;
 	*)
-		tmux split-window view "$i"
+		if has-gui
+		then
+			do-xdg-open "$i"
+		else
+			tmux split-window view "$i"
+		fi
 		;;
 
 	esac
