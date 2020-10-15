@@ -1,0 +1,10 @@
+#!/bin/sh
+
+#
+# unstamp
+#
+# Remove timestamps from a file
+#
+
+sed --regexp-extended \
+	-e 's/^[[][ 0-9]{4}[0-9][.][0-9]{6}]/[    #.######]/'
