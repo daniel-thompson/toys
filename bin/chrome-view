@@ -1,0 +1,51 @@
+#!/bin/sh
+
+#
+# Chrome takes file type advice from the file extension causing it
+# to sometimes display HTML as plain text.
+#
+
+orig="$1"
+
+chrome () {
+	/opt/google/chrome/chrome "$@"
+}
+
+# Check that the file exists
+if [ ! -e "$orig" ]
+then
+	echo "$orig does not exist" >&2
+	exit 1
+fi
+
+# Special case a couple of file extensions... but force the file
+# extension in all other cases
+case "$orig" in
+*.html)
+	chrome "$orig"
+	;;
+*.txt)
+	chrome "$orig"
+	;;
+*)
+	# Check it is OK to make the copy
+	copy="$orig.$$.html"
+	if [ -e "$copy" ]
+	then
+		echo "$copy already exists" >&2
+		exit 2
+	fi
+
+
+	# Force the file extension and load in chrome
+	cp "$orig" "$copy"
+	chrome "$copy"
+
+	# Give chrome chance to open the file handle, then remove
+	# the file
+	sleep 2
+	rm -f tmp.$1.$$.html
+	;;
+esac
+
+exit 0
