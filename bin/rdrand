@@ -1,0 +1,19 @@
+#!/usr/bin/env hbcxx
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <unistd.h>
+
+int main(int argc, const char *argv[])
+{
+	unsigned char *block[4096];
+
+	while (true) {
+		for (int i=0; i<sizeof(block); i+=4)
+			asm volatile("rdrand %0" : "=r" (*(uint32_t *)(block+i)));
+
+		write(1, block, sizeof(block));
+	}
+	
+	return 0;
+}
