@@ -1,0 +1,197 @@
+#!/usr/bin/env python3
+
+'''
+autoply
+
+Python script to automagically apply patches.
+
+The directory lookup code relies on a config file ($HOME/.autoply)
+that looks something like:
+
+  [projects]
+  kdb = ~/Development/Kernel/linux-kgdb
+  kgdb = ~/Development/Kernel/linux-kgdb
+
+Ordinarily these tags above (kdb and kgdb) will be looked up using
+the e-mail subject.
+
+To override this and force a particular tag to be used then simply
+name the tag as a command line argument.
+'''
+
+
+import configparser
+import email, email.policy
+import re
+import os
+from pathlib import Path
+from subprocess import run
+import sys
+import urllib.request
+
+def get_patchwork_tags(msg):
+	if 'Message-ID' not in msg:
+		return ()
+
+	p = run(f"pwclient list -f%{{id}} -m {msg['Message-ID']}".split(),
+		capture_output=True)
+	if p.returncode != 0:
+		return ()
+
+	p = run(f"pwclient view {p.stdout.decode().strip()}".split(),
+		capture_output=True)
+	if p.returncode != 0:
+		return ()
+
+	pwmsg = email.message_from_bytes(p.stdout, policy=email.policy.default)
+	return get_tags(pwmsg.get_content().split('\n'))
+
+def get_tag(ln):
+	if ':' not in ln:
+		return None
+	
+	(label, value) = [ t.strip() for t in ln.split(':', maxsplit=1) ]
+
+	if ' ' in label:
+		return None
+
+	return (label, value)
+
+def get_tags(content, length=None):
+	if not length:
+		length = len(content)
+
+	tags = []
+	for i in range(length):
+		tag = get_tag(content[i])
+		if tag:
+			tags.append(tag)
+	
+	return tags
+	
+def has_tag(content, label, value):
+	tags = get_tags(content)
+	for tag in tags:
+		if tag[0] == label and value in tag[1]:
+			return True
+	
+	return False
+
+def insert_tag(content, index, label, value):
+	assert ' ' not in label
+
+	ending = '\r' if content[index].endswith('\r') else ''
+	content.insert(index, f'{label}: {value}{ending}')
+	
+	return index + 1
+
+# Process our configuration file. If file does not exist then config
+# will be valid (but empty)
+config = configparser.ConfigParser()
+config.read(Path.home() / '.autoply')
+
+# Read the message
+msg = email.message_from_file(sys.stdin, policy=email.policy.default)
+
+# Ensure we only work on normal plain test messages
+if msg.is_multipart() or msg.get_content_type() != 'text/plain':
+	print(f"ERROR: autoply cannot handle {msg.get_content_type()}\n",
+	      file=sys.stderr)
+	sys.exit(1)
+
+# Change to the appropriate directory (if needed)
+p = run('git rev-parse --git-dir'.split(), capture_output=True)
+if p.returncode != 0:
+	subject = msg['Subject'].lower()
+	if subject.startswith('['):
+		subject = subject.split(']', maxsplit=1)[1].lstrip()
+
+	if len(sys.argv) > 1:
+		subject = sys.argv[1]
+
+	projects = config['projects'] if 'projects' in config else {}
+	gitdir = None
+	candidates = []
+	for tag, path in projects.items():
+		if subject.startswith(tag):
+			gitdir = Path(path)
+			break
+		if tag in subject:
+			candidates.append((tag, path))
+
+	if not gitdir and len(candidates) == 1:
+		tag, path = candidates[0]
+		gitdir = Path(path)
+	
+	if not gitdir:
+		print(f'ERROR: Cannot auto-detect git repo. '
+		      f'Candidates were {[ t for (t, p) in candidates]}\n',
+		      file=sys.stderr)
+		sys.exit(2)
+
+	# '~/a/b'parents is ('~/a/b', '~/a', '~', '.') but
+	# does not allow negative indexing so we must convert
+	# to a tuple and look at second from last element
+	if tuple(gitdir.parents)[-2] == Path('~'):
+		gitdir = Path.home() / gitdir.relative_to('~')
+	os.chdir(gitdir)
+	print(f'Auto-detected git repo as {gitdir}\n')
+
+# Find where to insert tags
+content = msg.get_content().split('\n')
+content = [ ln.rstrip('\r') for ln in content ]
+if '---' in content:
+	insert_at = content.index('---')
+elif '---\r' in content:
+	insert_at = content.index('---\r')
+else:
+	print(f'ERROR: autoply cannot find --- seperator', file=sys.stderr)
+	sys.exit(1)
+	
+if insert_at < 1 or not get_tag(content[insert_at - 1]):
+	print(f'WARNING: No tags before --- at line {insert_at}\n',
+	      file=sys.stderr)
+
+# Add a Link: field if possible
+if 'Message-ID' in msg and ('linux-kernel@vger.kernel.org' in msg['To'] or
+			    'linux-kernel@vger.kernel.org' in msg['Cc']):
+	msgid = msg['Message-ID'].lstrip('< ').rstrip('>\r')
+	link = f'https://lore.kernel.org/r/{msgid}'
+	try:
+		urllib.request.urlopen(link).close()
+		insert_at = insert_tag(content, insert_at, 'Link', link)
+	except:
+		pass
+
+# Import *-by: tags from patchwork
+for label, value in get_patchwork_tags(msg):
+	if label.endswith('-by') and not has_tag(content, label, value):
+		insert_at = insert_tag(content, insert_at, label, value)
+
+# Grab user credientials
+p = run('git config --get user.email'.split(), capture_output=True)
+user_email = p.stdout.decode().strip() if p.returncode == 0 else None
+p = run('git config --get user.name'.split(), capture_output=True)
+user_name = p.stdout.decode().strip() if p.returncode == 0 else None
+
+# Add a Signed-off-by: if that is missing (similar to 'git am -s' so
+# only useful for modes where we don't work via git am)
+if user_email and user_name:
+	signoff_index = None
+	for i in range(insert_at):
+		if user_email in content[i]:
+			signoff_index = i
+		break
+	if not signoff_index:
+		insert_at = insert_tag(content, insert_at, 'Signed-off-by',
+		                       f'{user_name} <{user_email}>')
+
+# Throw the message at checkpatch (if possible)
+if Path('scripts/checkpatch.pl').exists():
+	msg.set_content('\n'.join([ ln.rstrip('\r') for ln in content ]))
+	run('scripts/checkpatch.pl'.split(), input=msg.as_string().encode())
+
+# Finally send the results to git am
+msg.set_content('\n'.join(content))
+run('git am'.split(), input=msg.as_string().encode())
+#print(msg.as_string())
