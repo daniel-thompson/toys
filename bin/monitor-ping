@@ -15,7 +15,7 @@ if csv:
 	fmt = '{},{},{},{},{},{},{},{},{}'
 	sep = ','
 else:
-	fmt = '{}  Got {:>3} of {:>3}  Lost{:>3}  rtt {}/{}/{}/{} ms'
+	fmt = '{}  Got {:>3} of {:>3} Lost{:>5} rtt {}/{}/{}/{} ms'
 	sep = ' '
 
 def ping(address):
@@ -30,9 +30,16 @@ def ping(address):
 	stats = stats.decode(encoding='UTF-8')
 
 	m = re.search(
-		'([0-9]+) packets transmitted, ([0-9]+) received, ([0-9]+)% packet loss, time ([0-9]+)ms',
+		'([0-9]+) packets transmitted, ([0-9]+) received, ([0-9.]+)% packet loss, time ([0-9]+)ms',
 		stats)
-	(tx, rx, loss, time) = [ int(x) for x in m.groups() ]
+	if not m:
+		print("Failed to parse ping output: " + stats)
+		return
+
+	tx = int(m.group(1))
+	rx = int(m.group(2))
+	loss = float(m.group(3))
+	time = int(m.group(4))
 
 	m = re.search(
 		'rtt min/avg/max/mdev = ([0-9.]+)/([0-9.]+)/([0-9.]+)/([0-9.]+) ms',
