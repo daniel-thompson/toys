@@ -7,8 +7,8 @@ install :
 	mkdir ~/.bashrc.d
 	ln -s $(PWD)/bashrc.d/* ~/.bashrc.d/
 	cat bashrc >> ~/.bashrc
-	mkdir -p ~/public/bin
-	ln -s $(PWD)/bin/* ~/public/bin
+	mkdir -p ~/Apps/bin
+	ln -s $(PWD)/bin/* ~/Apps/bin
 	ln -s $(PWD)/gitconfig ~/.gitconfig
 	ln -s $(PWD)/tmux.conf ~/.tmux.conf
 	ln -s $(PWD)/vim ~/.vim

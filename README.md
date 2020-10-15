@@ -26,8 +26,8 @@ Quickstart
     cat bashrc >> ~/.bashrc
 
     # Put some scripts on the path
-    mkdir -p ~/public/bin
-    ln -s $PWD/bin/* ~/public/bin
+    mkdir -p ~/Apps/bin
+    ln -s $PWD/bin/* ~/Apps/bin
 
     # Configure the various single files
     ln -s $PWD/gitconfig ~/.gitconfig
