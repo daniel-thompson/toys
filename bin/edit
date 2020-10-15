@@ -25,7 +25,7 @@ fi
 
 # If TMUX is set and the fullscreen open is set then we also fallback to
 # regular vim
-if [ ! -z $TMUX ] && tmux show -gv @fullscreen > /dev/null 2> /dev/null
+if [ ! -z $TMUX ] && [ ! -z $(tmux show -gv @fullscreen 2> /dev/null) ]
 then
 	nogui=1
 fi
@@ -43,12 +43,18 @@ fi
 
 serverlist=`$gvim --serverlist`
 
-uppercase () {
-	echo "$@" | tr a-z- A-Z_
+server_exists () {
+	echo $serverlist | grep -F "$1" 2>&1 >/dev/null
 }
 
-server_exists () {
-	echo $serverlist | grep -F "`uppercase \"$1\"`" 2>&1 >/dev/null
+safe_server_name () {
+	# Prohibit lowercase characters and the minus sign in server
+	# names.
+	#
+	# As it happens gvim handles minus just fine but we we get problems
+	# with dvim if we permit a minus sign so it is easiest just to
+	# prohbit it across the board!
+	basename "$1" | tr a-z- A-Z_
 }
 
 if [ "$PWD" = "$HOME" ]
@@ -61,7 +67,7 @@ else
 	d="$PWD"
 	while [ "$d" != "/" ]
 	do
-		server="`basename \"$d\"`"
+		server="`safe_server_name \"$d\"`"
 		if server_exists "$server"
 		then
 			break
@@ -72,7 +78,7 @@ else
 
 	if [ "$d" = "/" ]
 	then
-		server="`basename \"$PWD\"`"
+		server="`safe_server_name \"$PWD\"`"
 	fi
 fi
 
