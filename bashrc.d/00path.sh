@@ -87,6 +87,15 @@ python-path-prepend () {
 }
 
 all-path-append () {
+	local arch=`uname -m`
+	case $arch in
+	aarch64)
+		[ -d $1/$arch-linux-gnu ] \
+			&& [ ! -e $1/$arch-linux-gnu/bin/objdump ] \
+			&& all-path-prepend $1/$arch-linux-gnu
+		;;
+	esac
+
 	libpath-append $1/lib64
 	libpath-append $1/lib
 	manpath-append $1/man
@@ -102,4 +111,13 @@ all-path-prepend () {
 	path-prepend $1/bin
 	pkg-config-path-prepend $1/lib/pkgconfig
 	python-path-append $1/lib64/python2.7/site-packages
+
+	local arch=`uname -m`
+	case $arch in
+	aarch64)
+		[ -d $1/$arch-linux-gnu ] \
+			&& [ ! -e $1/$arch-linux-gnu/bin/objdump ] \
+			&& all-path-prepend $1/$arch-linux-gnu
+		;;
+	esac
 }
