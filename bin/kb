@@ -11,7 +11,7 @@
 # (at your option) any later version.
 #
 
-import os, re, subprocess, tempfile, sys
+import os, re, subprocess, tempfile, sys, time
 
 KB = os.environ['HOME'] + '/Documents/Wiki'
 
@@ -76,6 +76,21 @@ class KnowledgeBase:
 
 	def open(self):
 		return open(KB + os.sep + self.kb, 'r')
+
+	def do_browse(self):
+		with tempfile.NamedTemporaryFile(prefix='tmp_kb_', suffix='.html') as f:
+			p = subprocess.run(['cmark', KB+os.sep+self.kb], capture_output=True)
+			f.write(p.stdout)
+			f.flush()
+			retval = subprocess.call( ['xdg-open', f.name])
+
+			# Give time for the web browser to render the file (when we leave
+			# the with block and the file is closed then it will be deleted).
+			# Note that for some web browsers this sleep is pointless because
+			# the browser will already have got a file handle before xdg-open
+			# completed. Unfortunately this is not *always* true so this hack
+			# remains.
+			time.sleep(2)
 
 	def do_edit(self, argv=[]):
 		return subprocess.call([editor()] + argv + [KB+os.sep+self.kb])
@@ -160,15 +175,23 @@ Built-in actions:
 			return
 
 		with tempfile.NamedTemporaryFile(prefix='tmp_kb_', suffix='.sh') as f:
+			# We cannot pass -ex on the bash command line since, in recent
+			# bash releases, that results in trace messages during initialization.
+			# This messes up the line numbers but is the lesser of two evils
+			f.writelines([bytes('set -ex\n', 'ascii')])
+
 			f.writelines([bytes(c+'\n', 'ascii') for c in cmds])
 			f.flush()
-			retval = subprocess.call( [os.environ['SHELL'], '-ex', f.name] + argv)
+			retval = subprocess.call( [os.environ['SHELL'], f.name] + argv)
 
 		return retval
 
+def do_browse(argv):
+	return KnowledgeBase(argv[0]).do_browse()
+
 def do_dryrun(argv):
 	if len(argv) < 2:
-		raise KBError("Missing arguments. Try 'kb {} help'.".format(argv[0]))
+		raise KBError("Missing arguments. Try 'kb help'.")
 	return KnowledgeBase(argv[0]).do_run(argv[1], argv[2:], no_execute=True)
 
 def do_edit(argv):
@@ -222,10 +245,12 @@ def do_show(argv):
 
 def do_run(argv):
 	if len(argv) < 2:
-		raise KBError("Missing arguments. Try 'kb {} help'.".format(argv[0]))
+		raise KBError("Missing arguments. Try 'kb help'.")
 	return KnowledgeBase(argv[0]).do_run(argv[1], argv[2:])
 
 builtin = {
+        'browse': (do_browse,
+		'Load the knowledge base entry in a web browser'),
 	'dryrun': (do_dryrun,
 		"Show that commands that would be expected by 'run'"),
 	'edit': (do_edit,
