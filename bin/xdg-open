@@ -71,7 +71,7 @@ do
 	i="${i#file://}"
 
 	case "$i" in
-	*.eml)
+	*.eml|*.mbox)
 		formail -b < "$i" > $HOME/.mbox
 		if has-gui
 		then
