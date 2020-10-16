@@ -12,7 +12,7 @@ install :
 	ln -s $(PWD)/gitconfig ~/.gitconfig
 	ln -s $(PWD)/tmux.conf ~/.tmux.conf
 	ln -s $(PWD)/vim ~/.vim
-	printf 'doc/tags\n.gitignore\n' > vim/bundle/vimwiki/.gitignore
+	printf 'doc/tags\n.gitignore\n' >> vim/bundle/vimwiki/.gitignore
 
 #
 # Useful packages to get the best out of the toys.
