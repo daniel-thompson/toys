@@ -30,6 +30,11 @@ import sys
 import urllib.request
 import time
 
+# Adopt a policy that does minimal reformatting to the payload. git copes
+# just fine with a reformatted payload but scripts/checkpatch.pl gets
+# confused if we attempt RFC 5322 line breaking.
+autoply_policy = email.policy.default.clone(max_line_length=255)
+
 def get_patchwork_tags(msg):
 	if 'Message-ID' not in msg:
 		return ()
@@ -46,7 +51,7 @@ def get_patchwork_tags(msg):
 		print(p.stderr.decode().strip())
 		return ()
 
-	pwmsg = email.message_from_bytes(p.stdout, policy=email.policy.default)
+	pwmsg = email.message_from_bytes(p.stdout, policy=autoply_policy)
 	return get_tags(pwmsg.get_content().split('\n'))
 
 def get_tag(ln):
@@ -94,7 +99,7 @@ config = configparser.ConfigParser()
 config.read(Path.home() / '.autoply')
 
 # Read the message
-msg = email.message_from_file(sys.stdin, policy=email.policy.default)
+msg = email.message_from_file(sys.stdin, policy=autoply_policy)
 
 # Ensure we only work on normal plain test messages
 if msg.is_multipart() or msg.get_content_type() != 'text/plain':
