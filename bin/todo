@@ -19,4 +19,20 @@ then
 	echo ERROR: Cannot derive a filename
 fi
 
-echo "${message}" > "$HOME/Documents/Wiki/todo/$subject.eml" && echo Recorded action as "$subject.eml"
+unset oldsubj
+while [ "$subject" != "$oldsubj" ]
+do
+	oldsubj="$subject"
+	subject="$(echo $subject | sed \
+			-e 's/^Re: //' \
+			-e 's/^RE: //' \
+			-e 's/^Fwd: //' \
+			-e 's/^Fw: //' \
+			-e 's/^FW: //')"
+
+	# Some additional special cases for work related tools (NOUPSTREAM)
+	subject="$(echo $subject | sed \
+			-e 's/Awaiting Review: .* Submitted a Timesheet.*/Timesheet Awaiting Review/')"
+done
+
+echo "${message}" | formail -ds >> "$HOME/Documents/Wiki/todo/$subject.eml" && echo Recorded action as "$subject.eml"
