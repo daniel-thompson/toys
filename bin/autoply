@@ -28,6 +28,7 @@ from pathlib import Path
 from subprocess import run
 import sys
 import urllib.request
+import time
 
 def get_patchwork_tags(msg):
 	if 'Message-ID' not in msg:
@@ -195,3 +196,6 @@ if Path('scripts/checkpatch.pl').exists():
 msg.set_content('\n'.join(content))
 run('git am'.split(), input=msg.as_string().encode())
 #print(msg.as_string())
+
+# Allow problems to be read. Yes, this is gross... but it's also convenient
+time.sleep(3)
