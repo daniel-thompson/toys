@@ -37,11 +37,13 @@ def get_patchwork_tags(msg):
 	p = run(f"pwclient list -f%{{id}} -m {msg['Message-ID']}".split(),
 		capture_output=True)
 	if p.returncode != 0:
+		print(p.stderr.decode().strip())
 		return ()
 
 	p = run(f"pwclient view {p.stdout.decode().strip()}".split(),
 		capture_output=True)
 	if p.returncode != 0:
+		print(p.stderr.decode().strip())
 		return ()
 
 	pwmsg = email.message_from_bytes(p.stdout, policy=email.policy.default)
