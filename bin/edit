@@ -16,6 +16,20 @@ then
 	shift
 fi
 
+# If edit has been called from inside a VS Cod[ium|e] seesion then let's
+# open the file within that codium instance.
+if [ "$TERM_PROGRAM" = "vscode" ]
+then
+	[ ! -z $nofork ] && nofork="--wait"
+
+	if [ ! -z `which codium` ]
+	then
+		exec codium $nofork "$@"
+	else
+		exec code $nofork "$@"
+	fi
+fi
+
 # If DISPLAY is not set then we can cannot have a gvim server but
 # we try to fallback using DBus before giving up and using vim
 if [ -z $DISPLAY ]
@@ -91,7 +105,7 @@ then
 		then
 			$gvim --servername "$server" --remote-tab "$@"
 		else
-			echo Waiting for tab to close... 
+			echo Waiting for tab to close...
 			$gvim --servername "$server" --remote-tab-wait "$@"
 		fi
 	else
