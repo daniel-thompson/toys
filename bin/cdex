@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#
+# cdex - Change directory and execute
+#
+# Usage:
+#   cdex <dir> <cmd> <args>...
+#
+# Example:
+#   cat 0001-magic.patch | ssh bionic cdex /build/kernel/linux-queued git am
+#
+
+cd $1
+shift
+exec "$@"
