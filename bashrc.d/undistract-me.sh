@@ -11,5 +11,5 @@
 # Don't engage undistraction unless xprop is working properly
 xprop -root _NET_ACTIVE_WINDOW > /dev/null 2> /dev/null || return
 
-. $HOME/Projects/toys/undistract-me/long-running.bash
+. $HOME/Projects/daniel-thompson/toys/undistract-me/long-running.bash
 notify_when_long_running_commands_finish_install
