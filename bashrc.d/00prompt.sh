@@ -4,7 +4,7 @@
 # Handle prompt display and per-line updates
 #
 
-PS1="`hostname -s | tr A-Z a-z`\$ "
+[ -z $BBPATH ] && PS1="`hostname -s | tr A-Z a-z`\$ "
 
 # Automatically update the title of the terminal emulator
 function update_title() {
