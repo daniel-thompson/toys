@@ -32,3 +32,7 @@
 [alias]
 	root = !pwd
 	sed = !git ls-files | xargs sed -i \"$@\"
+[color]
+	ui = auto
+[pull]
+	rebase = false
