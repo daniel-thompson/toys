@@ -23,4 +23,9 @@ do
 	quote_args="${quote_args} $arg"
 done
 
-exec ssh $display_host "notify-receive ${quote_args}"
+# Fiddling with the PATH allows us to find the notify-receive binary on hosts
+# that don't end up sourcing .bashrc during an ssh call (for example because
+# /bin/sh isn't bash). However we use PATH rather than hardcoding where to
+# find notify-receive to keep things (mostly) working if the executable isn't
+# located in ~/Apps/bin .
+exec ssh $display_host "PATH=/home/\$USER/Apps/bin:\$PATH notify-receive ${quote_args}"
