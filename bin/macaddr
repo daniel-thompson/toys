@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Generate a locally administered random MAC address
+od -An -N6 -t x1 /dev/urandom | sed -e 's/^ \(.\). /\12:/' -e 's/ /:/'
