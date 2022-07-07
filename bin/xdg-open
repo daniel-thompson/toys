@@ -50,9 +50,17 @@ do-xdg-open () {
 	return $R
 }
 
-do-gnome-terminal () {
-	gnome-terminal --quiet --wait -- "$@"
-
+do-gui-terminal () {
+	# gnome-terminal no longer works as a standalone terminal when
+	# there is another session running. Try to use Console (a.k.a.
+	# King's Cross) where possible to ensure we can still xdg-open
+	# our action items ;-)
+	if [ -z $GNOME_TERMINAL_SCREEN ] && [ -e /usr/bin/kgx ]
+	then
+		/usr/bin/kgx --wait --command "$*"
+	else
+		gnome-terminal --quiet --wait -- "$@"
+	fi
 }
 
 do-tmux-split () {
@@ -75,7 +83,7 @@ do
 		formail -b < "$i" > $HOME/.mbox
 		if has-gui
 		then
-			do-gnome-terminal mutt -Rf $HOME/.mbox
+			do-gui-terminal mutt -Rf $HOME/.mbox
 		else
 			do-tmux-split mutt -Rf $HOME/.mbox
 		fi
