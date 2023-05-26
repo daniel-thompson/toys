@@ -36,3 +36,5 @@
 	ui = auto
 [pull]
 	rebase = false
+[http]
+	cookiefile = /home/drt/.gitcookies
