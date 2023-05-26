@@ -83,7 +83,7 @@ python-path-append () {
 python-path-prepend () {
 	echo $PYTHONPATH | grep "$1" > /dev/null || \
 		PYTHONPATH=$1:$PYTHONPATH
-	export PATH
+	export PYTHONPATH
 }
 
 all-path-append () {
