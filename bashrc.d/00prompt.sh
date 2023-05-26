@@ -13,7 +13,7 @@ function update_title() {
 		echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/#$HOME/~}"
 		echo -ne "\007"
 		;;
-	(screen*)
+	(alacritty|screen*|tmux*)
 		printf "\033]2;${PWD/#$HOME/~}\033\\"
 	esac
 }
