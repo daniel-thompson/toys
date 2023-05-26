@@ -86,6 +86,28 @@ python-path-prepend () {
 	export PYTHONPATH
 }
 
+xdg-data-dirs-append () {
+	if [ -z "$XDG_DATA_DIRS" ]
+	then
+		XDG_DATA_DIRS=$1
+	else
+		echo $XDG_DATA_DIRS | grep "$1" > /dev/null || \
+			XDG_DATA_DIRS=$XDG_DATA_DIRS:$1
+	fi
+	export XDG_DATA_DIRS
+}
+
+xdg-data-dirs-prepend () {
+	if [ -z "$XDG_DATA_DIRS" ]
+	then
+		XDG_DATA_DIRS=$1
+	else
+		echo $XDG_DATA_DIRS | grep "$1" > /dev/null || \
+			XDG_DATA_DIRS=$1:$XDG_DATA_DIRS
+	fi
+	export XDG_DATA_DIRS
+}
+
 all-path-append () {
 	local arch=`uname -m`
 	case $arch in
