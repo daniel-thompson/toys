@@ -5,7 +5,7 @@
 # to handle the file.
 #
 
-set -x
+#set -x
 
 startswith () {
 	[ "$1" != "${1#$2}" ]
@@ -16,13 +16,18 @@ endswith () {
 }
 
 do-xdg-open () {
-	# This is a mutt+firejail workaround. We need to copy temporary
-	# files to somewhere on the filesystem that a sandboxed web
-	# browser will actually be able to load.
-	if startswith "$1" /tmp/ && [ `file --brief --mime-type "$1"` == 'text/html' ]
+	# This is a double workaround:
+	#
+	# 1. It helps xdg-open identify that the file being opened really
+	#    is HTML
+	#
+	# 2. It helps sandboxed web browsers (firejail for example) to
+	#    access the file by placing it somewhere the sandbox allows
+	#    the web browser to load files from.
+	if startswith "$1" /tmp/ || startswith "$1" /var/tmp && [ `file --brief --mime-type "$1"` == 'text/html' ]
 	then
-		echo "Deploying mutt+firejail workaround"
 		fname="$HOME/.mozilla/tmp/`basename $1 .html`".html
+		echo "WORKAROUND: xdg-open $1 -> $fname"
 		mkdir -p "`dirname "$fname"`"
 		cp "$1" "$fname"
 		do-xdg-open file://"$fname"
