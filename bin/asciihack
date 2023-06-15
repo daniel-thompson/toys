@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import random
 import sys
 
 # asciicast-v1
@@ -55,7 +56,31 @@ def everything_booster(t, v):
 
 	return ( t, v )
 
+def artificial_typing(log):
+	'''Make copy 'n pasted strings look like they were typed
+
+	Happily don't need heuristics for this, we can just capture the
+	echoed escape codes to identify copy 'n pasted text. Yay!
+	'''
+	newlog = []
+	for t, v in log:
+		# Spot the escape sequences!
+		if v.startswith('\u001b[3m') and v.endswith('\u001b[23m'):
+			newlog.append([t, v[4]])
+			for c in v[5:-5]:
+				if c == ' ':
+					# Make it look like the typist treats words atomically
+					# and often has a longer pause between words than
+					# between characters.
+					newlog.append([random.uniform(0.0, 0.20), c])
+				else:
+					newlog.append([random.uniform(0.00, 0.08), c])
+		else:
+			newlog.append([t, v])
+	return newlog
+
 log['stdout'] = [ everything_booster(t, v) for t, v in log['stdout'] ]
+log['stdout'] = artificial_typing(log['stdout'])
 
 # asciicast-v1
 #json.dump(log, sys.stdout, indent=2)
