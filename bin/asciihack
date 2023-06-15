@@ -6,34 +6,34 @@ import sys
 log = json.load(sys.stdin)
 
 def long_delay_booster(t, v):
-    '''Limit all intra-update delays to be now more than 1.5s
-    '''
+	'''Limit all intra-update delays to be now more than 1.5s
+	'''
 	return ( 1.5 if t > 1.5 else t, v )
 
 def download_booster(t, v):
-    '''Apply a 4x speed up if we thing we are showing some kind of
-    download indicator.
+	'''Apply a 4x speed up if we thing we are showing some kind of
+	download indicator.
 
-    The heuristic is very simple and is based on the use of carriage
-    return to update the status.
-    '''
+	The heuristic is very simple and is based on the use of carriage
+	return to update the status.
+	'''
 	return ( t/4 if v.startswith('\r') and '%' in v else t, v )
 
 def typing_booster(t, v):
-    '''Apply a 4x speed up to typing speed.
+	'''Apply a 4x speed up to typing speed.
 
-    Triggers if the update consists of a single character (or a special
-    backspace combination).
-    '''
+	Triggers if the update consists of a single character (or a special
+	backspace combination).
+	'''
 	return ( t/4 if len(v) == 1 or v == '\b \b' else t, v )
 
 def uart_booster(t, v, baud=115200):
-    '''Eliminate delays due to UART "render time".
+	'''Eliminate delays due to UART "render time".
 
-    First calculate (roughly) how long it would take to deliver the
-    message via the UART and then remove this from the time delta
-    (without letting it become negative).
-    '''
+	First calculate (roughly) how long it would take to deliver the
+	message via the UART and then remove this from the time delta
+	(without letting it become negative).
+	'''
 	t -= len(v) * (10 / baud)
 	return ( t if t > 0 else 0, v )
 
