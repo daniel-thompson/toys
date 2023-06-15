@@ -3,7 +3,17 @@
 import json
 import sys
 
-log = json.load(sys.stdin)
+# asciicast-v1
+#log = json.load(sys.stdin)
+
+# asciicast-v2
+log = { 'header': json.loads(sys.stdin.readline()), 'stdout': [] }
+t = 0
+for ln in sys.stdin.readlines():
+	(ts, d, v) = json.loads(ln)
+	assert d == 'o'
+	log['stdout'].append([ts - t, v])
+	t = ts
 
 def long_delay_booster(t, v):
 	'''Limit all intra-update delays to be now more than 1.5s
@@ -47,4 +57,12 @@ def everything_booster(t, v):
 
 log['stdout'] = [ everything_booster(t, v) for t, v in log['stdout'] ]
 
-json.dump(log, sys.stdout, indent=2)
+# asciicast-v1
+#json.dump(log, sys.stdout, indent=2)
+
+# asciicast-v2
+print(json.dumps(log['header']))
+t = 0
+for (ts, v) in log['stdout']:
+	print(json.dumps([t+ts, 'o', v]))
+	t += ts
