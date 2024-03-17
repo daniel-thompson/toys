@@ -1,0 +1,82 @@
+#!/bin/sh
+
+#
+# tcat - Bourne Shell Templates
+# =============================
+#
+# A template processor that substitutes environment variables and bourne shell
+# fragments during processing. It sits about halfway between envsubst and
+# jinja2.
+#
+# Compared to envsubst, it has a richer set of variable expansions, including
+# command substitution.
+#
+# WARNING: "command substitution" implies data is executable. In other words
+# tcat has almost unlimited power over the files in your home directory. It
+# must never be used to expand untrusted templates.
+#
+# Tutorial
+# --------
+#
+# tcat works by transforming the input files into bourne shell "here
+# documents".  That means that variable substitution works the same way that
+# it does in bourne shell.
+#
+#     Simple variable expansion can be $RAW or be ${BRACKETED}.
+#
+#     $(echo Command substitution) works just like it does in the shell and
+#     can use bracketed or `echo backtick` syntax.
+#
+#     Here documents do not expand 'single-' or "double-quoted" strings. This
+#     means no special treatment is needed to process documents that contain
+#     these characters. In fact the only symbols that need to be escaped are
+#     \$ and \` .
+#
+#     ${DEFAULTS:-are expressed} using POSIX default value syntax. This
+#     expands either to 'are expressed' if DEFAULT is unset, otherwise it it
+#     expands to the content of DEFAULT).
+#
+#     ${UNSET:?variables can also trigger error reporting}. This allows a
+#     template to report an error if a mandatory option is overlooked.
+#
+#     $(include subtemplate.tc) is a simple command substitution but the
+#     include function is defined by tcat itself. It allows templates to refer
+#     to other templates and be expanded in the same way.
+#
+#     $(cat file.raw) is similar but does not do any variable substitution.
+#
+# Example
+# -------
+#
+# This is a self-referential example that shows how this file can be merged
+# into a HTML header/footer template. In this example the header and footer
+# are trivial but in a real example.
+#
+# README.html.tc:
+#
+#     $(include header.html.tc)
+#
+#     <!-- Extract the markdown from the tcat script and convert it to html -->
+#     $(egrep '^#($| )' tcat | cut -b3- | cmark)
+#
+#     $(include footer.html.tc)
+#
+# header.html.tc:
+#
+#     <!DOCTYPE html>
+#     <html>
+#     <head>
+#       <title>tcat v${VERSION:?is missing}</title>
+#     </head>
+#     <body>
+#
+# footer.html.tc
+#
+#     </body>
+#     </html>
+#
+
+include () {
+    source <(echo "cat <<__EOF_$$__"; cat "$@"; echo "__EOF_$$__")
+}
+include "$@"
