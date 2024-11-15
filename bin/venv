@@ -1,0 +1,46 @@
+#!/bin/bash
+
+venvdir () {
+	if [ -z "$1" ]
+	then
+		echo $(basename $PWD)-venv
+	else
+		echo "$1"
+	fi
+}
+
+init () {
+	if [ -z "$@" ]
+	then
+		"$PYTHON" -m venv "$(venvdir)"
+	else
+		"$PYTHON" -m venv "$@"
+	fi
+}
+
+activate () {
+
+	if [ -e "$HOME/.bashrc" ]
+	then
+		exec bash --rcfile <(cat "$HOME/.bashrc" "$(venvdir "$1")/bin/activate")
+	else
+		exec bash --rcfile "$(venvdir "$1")/bin/activate"
+	fi
+}
+
+[ -z $PYTHON ] && PYTHON=python3
+
+cmd="$1"
+shift
+
+case "$cmd" in
+init|activate)
+	$cmd "$@"
+	;;
+enter)
+	activate "$@"
+	;;
+*)
+	echo "$1 is not a python-venv command (try \`init my-venv\` then \`activate my-venv\`) " >&2
+	exit 1
+esac
