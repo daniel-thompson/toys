@@ -35,6 +35,8 @@ function update_tmux_session() {
 }
 
 PROMPT_COMMAND='update_title; update_tmux_session'
-export -f update_title
-export -f update_tmux_session
-export PROMPT_COMMAND
+# Exporting these confuses task shells is Zed (and there isn't really any need
+# to export them. Every new interactive shell will source this file anyway.
+#export -f update_title
+#export -f update_tmux_session
+#export PROMPT_COMMAND
