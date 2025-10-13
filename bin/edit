@@ -30,6 +30,14 @@ then
 	fi
 fi
 
+# ... and do the same if we are running in Zed
+if [ "$TERM_PROGRAM" = "zed" ]
+then
+	echo "Openning with zed..."
+	[ ! -z $nofork ] && nofork="--wait"
+	exec flatpak run dev.zed.Zed $nofork "$@"
+fi
+
 # If DISPLAY is not set then we can cannot have a gvim server but
 # we try to fallback using DBus before giving up and using vim
 if [ -z $DISPLAY ]
