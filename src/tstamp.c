@@ -88,7 +88,8 @@ int poll_with_stopwatch(int fd, uint64_t epoch)
 	uint64_t start = time_now();
 	uint64_t olddelta = 0;
 
-	res = poll(fds, lengthof(fds), 30000);
+	res = poll(fds, lengthof(fds),
+		   (options.watchdog < 30 ? options.watchdog : 30) * 1000);
 	if (res != 0)
 		return res;
 
@@ -102,12 +103,12 @@ int poll_with_stopwatch(int fd, uint64_t epoch)
 			/* stopwatch messages are not logged since they are
 			 * only really useful during interactive use
 			 */
-			scrub = printf("[No output for %02u:%02u:%02u seconds]",
+			scrub = printf("[No output for %02u:%02u:%02u]",
 			       delta / 3600, (delta / 60) % 60, delta % 60);
 			fflush(stdout);
 			olddelta = delta;
 
-			if (options.watchdog && delta > options.watchdog) {
+			if (options.watchdog && delta >= options.watchdog) {
 				uint64_t stamp = time_now() - epoch;
 				logprintf("\n[%5" PRIu64 ".%06" PRIu64
 				       "] WATCHDOG EXPIRED; Terminating...\n",
