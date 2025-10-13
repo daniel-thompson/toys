@@ -5,6 +5,7 @@
 [user]
 	name = Daniel Thompson
 	email = daniel@redfelineninja.org.uk
+	signingkey = 39F788A1
 
 [push]
 	default = simple
@@ -38,3 +39,5 @@
 	rebase = false
 [http]
 	cookiefile = /home/drt/.gitcookies
+[init]
+	defaultBranch = main
