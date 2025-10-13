@@ -35,6 +35,3 @@ function update_tmux_session() {
 }
 
 PROMPT_COMMAND='update_title; update_tmux_session'
-export -f update_title
-export -f update_tmux_session
-export PROMPT_COMMAND
