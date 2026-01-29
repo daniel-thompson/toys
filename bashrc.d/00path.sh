@@ -108,6 +108,11 @@ xdg-data-dirs-prepend () {
 	export XDG_DATA_DIRS
 }
 
+python-site-packages () {
+    local libdir=$(python -c "import sys; print('\n'.join(sys.path))" | grep 'lib[0-9]*/python[0-9][.][0-9][0-9]*$' | tail -n 1)
+    echo $1/lib${libdir#*lib}/site-packages
+}
+
 all-path-append () {
 	local arch=`uname -m`
 	case $arch in
@@ -118,21 +123,23 @@ all-path-append () {
 		;;
 	esac
 
-	libpath-append $1/lib64
-	libpath-append $1/lib
-	manpath-append $1/man
-	path-append $1/bin
-	pkg-config-path-append $1/lib/pkgconfig
-	python-path-append $1/lib64/python2.7/site-packages
+	[ -d $1/lib64 ] && libpath-append $1/lib64
+	[ -d $1/lib ] && libpath-append $1/lib
+	[ -d $1/man ] && manpath-append $1/man
+	[ -d $1/bin ] && path-append $1/bin
+	[ -d $1/lib/pkgconfig ] && pkg-config-path-append $1/lib/pkgconfig
+	local pylib="$(python-site-packages $1)"
+	[ -d $pylib ] && python-path-append $pylib
 }
 
 all-path-prepend () {
-	libpath-prepend $1/lib
-	libpath-prepend $1/lib64
-	manpath-prepend $1/man
-	path-prepend $1/bin
-	pkg-config-path-prepend $1/lib/pkgconfig
-	python-path-append $1/lib64/python2.7/site-packages
+    [ -d $1/lib ] && libpath-prepend $1/lib
+	[ -d $1/lib64 ] && libpath-prepend $1/lib64
+	[ -d $1/man ] && manpath-prepend $1/man
+	[ -d $1/bin ] && path-prepend $1/bin
+	[ -d $1/lib/pkgconfig ] && pkg-config-path-prepend $1/lib/pkgconfig
+	local pylib="$(python-site-packages $1)"
+	[ -d $pylib ] && python-path-append $pylib
 
 	local arch=`uname -m`
 	case $arch in
