@@ -1,0 +1,37 @@
+#!/bin/sh
+
+#
+# Comfortable HTML viewer (for e-mail)
+#
+# Use chromium (in headless mode) to render a PDF and then opens it an a
+# PDF viewer.
+#
+
+for page in "$@"
+do
+    # Check that the file exists
+    if [ ! -e "${page}" ]
+    then
+        echo "${page} does not exist" >&2
+        exit 1
+    fi
+
+    # Special case a couple of file extensions... but force the file
+    # extension in all other cases
+    case "${page}" in
+    *.html)
+        ;;
+    *.txt)
+        ;;
+    *)
+        newpage="$(mktemp --suffix=.html)"
+        cp "${page}" "${newpage}"
+        page="${newpage}"
+        ;;
+    esac
+
+    pdf="$(mktemp --suffix=.pdf)"
+    chromium --headless --incognito --disable-gpu --print-to-pdf="${pdf}" "file://$(readlink -f ${page})"
+    evince "${pdf}"
+
+done
