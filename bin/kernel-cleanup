@@ -18,7 +18,7 @@ then
 fi
 
 # Check the terminal is big enough
-if [ "$LINES" -lt 21 ]
+if [ "$(stty size | cut -f1 -d' ')" -lt 21 ]
 then
     echo ERROR: terminal must have at least 21 lines
     exit 2
